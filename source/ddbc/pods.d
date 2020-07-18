@@ -177,370 +177,481 @@ unittest {
 }
 
 
-template isSupportedSimpleType(alias value) {
-    alias ti = typeof(value);
-    static if (hasConvBy!value) {
-        static if (isConvertible!(value, long)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, ulong)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, double)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, Nullable!long)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, Nullable!ulong)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, Nullable!double)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, string)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, String)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, byte[])) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (isConvertible!(value, ubyte[])) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (true) {
-            enum bool isSupportedSimpleType = false;
-        }
-    } else static if (is(ti == function)) {
-        static if (is(ReturnType!(ti) == bool)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == byte)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == short)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == int)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == long)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == ubyte)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == ushort)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == uint)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == ulong)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == float)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == double)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!byte)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!short)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!int)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!long)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!ubyte)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!ushort)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!uint)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!ulong)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!float)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!double)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == string)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == String)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == SysTime)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == DateTime)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Date)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == TimeOfDay)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!SysTime)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!DateTime)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!Date)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == Nullable!TimeOfDay)) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == byte[])) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (is(ReturnType!(ti) == ubyte[])) {
-            enum bool isSupportedSimpleType = true;
-        } else static if (true) {
-            enum bool isSupportedSimpleType = false;
-        }
+template getFieldTraits(alias value) {
+    static if (is(typeof(value) == function)) {
+        alias ti = ReturnType!(typeof(value));
+    } else {
+        alias ti = typeof(value);
+    }
+    
+    static if (isConvertible!(value, long)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.LONG_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "long nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getLong(index)";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = long;
+        enum string             convertibleTypeCode         = "long";
+    } else static if (isConvertible!(value, ulong)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.ULONG_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "ulong nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getUlong(index)";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = ulong;
+        enum string             convertibleTypeCode         = "ulong";
+    } else static if (isConvertible!(value, double)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.DOUBLE_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "double nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getDouble(index)";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = double;
+        enum string             convertibleTypeCode         = "double";
+    } else static if (isConvertible!(value, Nullable!long)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_LONG_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!long nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!long(r.getLong(index))";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = Nullable!long;
+        enum string             convertibleTypeCode         = "Nullable!long";
+    } else static if (isConvertible!(value, Nullable!ulong)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_ULONG_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!ulong nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!ulong(r.getUlong(index))";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = Nullable!ulong;
+        enum string             convertibleTypeCode         = "Nullable!ulong";
+    } else static if (isConvertible!(value, Nullable!double)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_DOUBLE_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!double nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!double(r.getDouble(index))";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = Nullable!double;
+        enum string             convertibleTypeCode         = "Nullable!double";
+    } else static if (isConvertible!(value, string)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.STRING_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s !is null)";
+        enum string             columnTypeIsNullCode        = "(%s is null)";
+        enum string             columnTypeSetNullCode       = "string nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getString(index)";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = string;
+        enum string             convertibleTypeCode         = "string";
+    } else static if (isConvertible!(value, String)) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_STRING_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "string nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getString(index)";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = String;
+        enum string             convertibleTypeCode         = "String";
+    } else static if (isConvertible!(value, byte[])) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.BYTE_ARRAY_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(%s !is null)";
+        enum string             columnTypeIsNullCode        = "(%s is null)";
+        enum string             columnTypeSetNullCode       = "byte[] nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getBytes(index)";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = byte[];
+        enum string             convertibleTypeCode         = "byte[]";
+    } else static if (isConvertible!(value, ubyte[])) {
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.UBYTE_ARRAY_CONVERTIBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(%s !is null)";
+        enum string             columnTypeIsNullCode        = "(%s is null)";
+        enum string             columnTypeSetNullCode       = "ubyte[] nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getUbytes(index)";
+        enum bool               hasConvertibleType          = true;
+        alias                   convertibleType             = ubyte[];
+        enum string             convertibleTypeCode         = "ubyte[]";
     } else static if (is(ti == bool)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.BOOL_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "bool nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getBoolean(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == byte)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.BYTE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "byte nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getByte(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == short)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.SHORT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "ubyte nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getShort(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == int)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.INT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "int nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getInt(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == long)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.LONG_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "long nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getLong(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == ubyte)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.UBYTE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "ubyte nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getUbyte(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == ushort)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.USHORT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "ushort nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getUshort(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == uint)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.UINT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "uint nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getUint(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == ulong)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.ULONG_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "ulong nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getUlong(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == float)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.FLOAT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "float nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getFloat(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == double)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.DOUBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != 0)";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "double nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getDouble(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!byte)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_BYTE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!byte nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!byte(r.getByte(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!short)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_SHORT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!short nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!short(r.getShort(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!int)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_INT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!int nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!int(r.getInt(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!long)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_LONG_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!long nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!long(r.getLong(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!ubyte)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_UBYTE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!ubyte nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!ubyte(r.getUbyte(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!ushort)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_USHORT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!ushort nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!ushort(r.getUshort(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!uint)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_UINT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!uint nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!uint(r.getUint(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!ulong)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_ULONG_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!ulong nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!ulong(r.getUlong(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!float)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_FLOAT_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!float nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!float(r.getFloat(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!double)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_DOUBLE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!double nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!double(r.getDouble(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == string)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.STRING_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s !is null)";
+        enum string             columnTypeIsNullCode        = "(%s is null)";
+        enum string             columnTypeSetNullCode       = "string nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getString(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == String)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_STRING_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s is null)";
+        enum string             columnTypeSetNullCode       = "string nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getString(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == SysTime)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.SYSTIME_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != SysTime())";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "SysTime nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getSysTime(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == DateTime)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.DATETIME_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != DateTime())";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "DateTime nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getDateTime(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Date)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.DATE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != Date())";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "Date nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getDate(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == TimeOfDay)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.TIME_TYPE;
+        enum bool               columnTypeCanHoldNulls      = false;
+        enum string             columnTypeKeyIsSetCode      = "(%s != TimeOfDay())";
+        enum string             columnTypeIsNullCode        = "(false)";
+        enum string             columnTypeSetNullCode       = "TimeOfDay nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getTime(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!SysTime)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_SYSTIME_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!SysTime nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!SysTime(r.getSysTime(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!DateTime)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_DATETIME_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!DateTime nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!DateTime(r.getDateTime(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!Date)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_DATE_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!Date nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!Date(r.getDate(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == Nullable!TimeOfDay)) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.NULLABLE_TIME_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(!%s.isNull)";
+        enum string             columnTypeIsNullCode        = "(%s.isNull)";
+        enum string             columnTypeSetNullCode       = "Nullable!TimeOfDay nv;";
+        enum string             columnTypePropertyToVariant = "(%s.isNull ? Variant(null) : Variant(%s.get()))";
+        enum string             columnTypeDatasetReaderCode = "Nullable!TimeOfDay(r.getTime(index))";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == byte[])) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.BYTE_ARRAY_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(%s !is null)";
+        enum string             columnTypeIsNullCode        = "(%s is null)";
+        enum string             columnTypeSetNullCode       = "byte[] nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getBytes(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (is(ti == ubyte[])) {
-        enum bool isSupportedSimpleType = true;
+        enum bool               isSupportedSimpleType       = true;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.UBYTE_ARRAY_TYPE;
+        enum bool               columnTypeCanHoldNulls      = true;
+        enum string             columnTypeKeyIsSetCode      = "(%s !is null)";
+        enum string             columnTypeIsNullCode        = "(%s is null)";
+        enum string             columnTypeSetNullCode       = "ubyte[] nv;";
+        enum string             columnTypePropertyToVariant = "Variant(%s)";
+        enum string             columnTypeDatasetReaderCode = "r.getUbytes(index)";
+        enum bool               hasConvertibleType          = false;
     } else static if (true) {
-        enum bool isSupportedSimpleType = false;
+        enum bool               isSupportedSimpleType       = false;
+        enum PropertyMemberType propertyMemberType          = PropertyMemberType.init; // dummy
+        enum bool               columnTypeCanHoldNulls      = false; // dummy
+        enum bool               hasConvertibleType          = false; // dummy
     }
 }
 
-enum isSupportedSimpleType(T, string m) = isSupportedSimpleType!(__traits(getMember, T, m));
+enum hasConvertibleType(alias value) = getFieldTraits!value.hasConvertibleType;
+alias getConvertibleType(alias value) = getFieldTraits!value.convertibleType;
+alias getConvertibleType(T, string m) = getFieldTraits!(__traits(getMember, T, m)).convertibleType;
+enum getConvertibleTypeCode(alias value) = getFieldTraits!value.convertibleTypeCode;
 
-PropertyMemberType getPropertyType(alias value)() {
-    //pragma(msg, T.stringof);
-    alias ti = typeof(value);
-    static if (hasConvBy!value) {
-        static if (isConvertible!(value, long)) {
-            return PropertyMemberType.LONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, ulong)) {
-            return PropertyMemberType.ULONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, double)) {
-            return PropertyMemberType.DOUBLE_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, Nullable!long)) {
-            return PropertyMemberType.NULLABLE_LONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, Nullable!ulong)) {
-            return PropertyMemberType.NULLABLE_ULONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, Nullable!double)) {
-            return PropertyMemberType.NULLABLE_DOUBLE_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, string)) {
-            return PropertyMemberType.STRING_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, String)) {
-            return PropertyMemberType.NULLABLE_STRING_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, byte[])) {
-            return PropertyMemberType.BYTE_ARRAY_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(value, ubyte[])) {
-            return PropertyMemberType.UBYTE_ARRAY_CONVERTIBLE_TYPE;
-        } else static if (true) {
-            static assert (false, "has unsupported type " ~ ti.stringof);
-        }
-    } else static if (is(ti == bool)) {
-        return PropertyMemberType.BOOL_TYPE;
-    } else static if (is(ti == byte)) {
-        return PropertyMemberType.BYTE_TYPE;
-    } else static if (is(ti == short)) {
-        return PropertyMemberType.SHORT_TYPE;
-    } else static if (is(ti == int)) {
-        return PropertyMemberType.INT_TYPE;
-    } else static if (is(ti == long)) {
-        return PropertyMemberType.LONG_TYPE;
-    } else static if (is(ti == ubyte)) {
-        return PropertyMemberType.UBYTE_TYPE;
-    } else static if (is(ti == ushort)) {
-        return PropertyMemberType.USHORT_TYPE;
-    } else static if (is(ti == uint)) {
-        return PropertyMemberType.UINT_TYPE;
-    } else static if (is(ti == ulong)) {
-        return PropertyMemberType.ULONG_TYPE;
-    } else static if (is(ti == float)) {
-        return PropertyMemberType.FLOAT_TYPE;
-    } else static if (is(ti == double)) {
-        return PropertyMemberType.DOUBLE_TYPE;
-    } else static if (is(ti == Nullable!byte)) {
-        return PropertyMemberType.NULLABLE_BYTE_TYPE;
-    } else static if (is(ti == Nullable!short)) {
-        return PropertyMemberType.NULLABLE_SHORT_TYPE;
-    } else static if (is(ti == Nullable!int)) {
-        return PropertyMemberType.NULLABLE_INT_TYPE;
-    } else static if (is(ti == Nullable!long)) {
-        return PropertyMemberType.NULLABLE_LONG_TYPE;
-    } else static if (is(ti == Nullable!ubyte)) {
-        return PropertyMemberType.NULLABLE_UBYTE_TYPE;
-    } else static if (is(ti == Nullable!ushort)) {
-        return PropertyMemberType.NULLABLE_USHORT_TYPE;
-    } else static if (is(ti == Nullable!uint)) {
-        return PropertyMemberType.NULLABLE_UINT_TYPE;
-    } else static if (is(ti == Nullable!ulong)) {
-        return PropertyMemberType.NULLABLE_ULONG_TYPE;
-    } else static if (is(ti == Nullable!float)) {
-        return PropertyMemberType.NULLABLE_FLOAT_TYPE;
-    } else static if (is(ti == Nullable!double)) {
-        return PropertyMemberType.NULLABLE_DOUBLE_TYPE;
-    } else static if (is(ti == string)) {
-        return PropertyMemberType.STRING_TYPE;
-    } else static if (is(ti == String)) {
-        return PropertyMemberType.NULLABLE_STRING_TYPE;
-    } else static if (is(ti == SysTime)) {
-        return PropertyMemberType.SYSTIME_TYPE;
-    } else static if (is(ti == DateTime)) {
-        return PropertyMemberType.DATETIME_TYPE;
-    } else static if (is(ti == Date)) {
-        return PropertyMemberType.DATE_TYPE;
-    } else static if (is(ti == TimeOfDay)) {
-        return PropertyMemberType.TIME_TYPE;
-    } else static if (is(ti == Nullable!SysTime)) {
-        return PropertyMemberType.NULLABLE_SYSTIME_TYPE;
-    } else static if (is(ti == Nullable!DateTime)) {
-        return PropertyMemberType.NULLABLE_DATETIME_TYPE;
-    } else static if (is(ti == Nullable!Date)) {
-        return PropertyMemberType.NULLABLE_DATE_TYPE;
-    } else static if (is(ti == Nullable!TimeOfDay)) {
-        return PropertyMemberType.NULLABLE_TIME_TYPE;
-    } else static if (is(ti == byte[])) {
-        return PropertyMemberType.BYTE_ARRAY_TYPE;
-    } else static if (is(ti == ubyte[])) {
-        return PropertyMemberType.UBYTE_ARRAY_TYPE;
-    } else static if (true) {
-        static assert (false, "has unsupported type " ~ ti.stringof);
-    }
-}
+enum bool isSupportedSimpleType(alias value) = getFieldTraits!value.isSupportedSimpleType;
+enum bool isSupportedSimpleType(T, string m) = isSupportedSimpleType!(__traits(getMember, T, m));
 
-PropertyMemberType getPropertyMemberType(T, string m)() {
-    alias typeof(__traits(getMember, T, m)) ti;
-    mixin(`alias member = T.` ~ m ~ ";"); // alias member = __traits(getMember, T, m);
-    static if (hasConvBy!member) {
-        static if (isConvertible!(member, long)) {
-            return PropertyMemberType.LONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, ulong)) {
-            return PropertyMemberType.ULONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, double)) {
-            return PropertyMemberType.DOUBLE_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, Nullable!long)) {
-            return PropertyMemberType.NULLABLE_LONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, Nullable!ulong)) {
-            return PropertyMemberType.NULLABLE_ULONG_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, Nullable!double)) {
-            return PropertyMemberType.NULLABLE_DOUBLE_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, string)) {
-            return PropertyMemberType.STRING_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, String)) {
-            return PropertyMemberType.NULLABLE_STRING_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, byte[])) {
-            return PropertyMemberType.BYTE_ARRAY_CONVERTIBLE_TYPE;
-        } else static if (isConvertible!(member, ubyte[])) {
-            return PropertyMemberType.UBYTE_ARRAY_CONVERTIBLE_TYPE;
-        } else static if (true) {
-            static assert (false, "Member " ~ m ~ " of class " ~ T.stringof ~ " has unsupported type " ~ ti.stringof);
-        }
-    } else static if (is(ti == bool)) {
-        return PropertyMemberType.BOOL_TYPE;
-    } else static if (is(ti == byte)) {
-        return PropertyMemberType.BYTE_TYPE;
-    } else static if (is(ti == short)) {
-        return PropertyMemberType.SHORT_TYPE;
-    } else static if (is(ti == int)) {
-        return PropertyMemberType.INT_TYPE;
-    } else static if (is(ti == long)) {
-        return PropertyMemberType.LONG_TYPE;
-    } else static if (is(ti == ubyte)) {
-        return PropertyMemberType.UBYTE_TYPE;
-    } else static if (is(ti == ushort)) {
-        return PropertyMemberType.USHORT_TYPE;
-    } else static if (is(ti == uint)) {
-        return PropertyMemberType.UINT_TYPE;
-    } else static if (is(ti == ulong)) {
-        return PropertyMemberType.ULONG_TYPE;
-    } else static if (is(ti == float)) {
-        return PropertyMemberType.FLOAT_TYPE;
-    } else static if (is(ti == double)) {
-        return PropertyMemberType.DOUBLE_TYPE;
-    } else static if (is(ti == Nullable!byte)) {
-        return PropertyMemberType.NULLABLE_BYTE_TYPE;
-    } else static if (is(ti == Nullable!short)) {
-        return PropertyMemberType.NULLABLE_SHORT_TYPE;
-    } else static if (is(ti == Nullable!int)) {
-        return PropertyMemberType.NULLABLE_INT_TYPE;
-    } else static if (is(ti == Nullable!long)) {
-        return PropertyMemberType.NULLABLE_LONG_TYPE;
-    } else static if (is(ti == Nullable!ubyte)) {
-        return PropertyMemberType.NULLABLE_UBYTE_TYPE;
-    } else static if (is(ti == Nullable!ushort)) {
-        return PropertyMemberType.NULLABLE_USHORT_TYPE;
-    } else static if (is(ti == Nullable!uint)) {
-        return PropertyMemberType.NULLABLE_UINT_TYPE;
-    } else static if (is(ti == Nullable!ulong)) {
-        return PropertyMemberType.NULLABLE_ULONG_TYPE;
-    } else static if (is(ti == Nullable!float)) {
-        return PropertyMemberType.NULLABLE_FLOAT_TYPE;
-    } else static if (is(ti == Nullable!double)) {
-        return PropertyMemberType.NULLABLE_DOUBLE_TYPE;
-    } else static if (is(ti == string)) {
-        return PropertyMemberType.STRING_TYPE;
-    } else static if (is(ti == String)) {
-        return PropertyMemberType.NULLABLE_STRING_TYPE;
-    } else static if (is(ti == SysTime)) {
-        return PropertyMemberType.SYSTIME_TYPE;
-    } else static if (is(ti == DateTime)) {
-        return PropertyMemberType.DATETIME_TYPE;
-    } else static if (is(ti == Date)) {
-        return PropertyMemberType.DATE_TYPE;
-    } else static if (is(ti == TimeOfDay)) {
-        return PropertyMemberType.TIME_TYPE;
-    } else static if (is(ti == Nullable!SysTime)) {
-        return PropertyMemberType.NULLABLE_SYSTIME_TYPE;
-    } else static if (is(ti == Nullable!DateTime)) {
-        return PropertyMemberType.NULLABLE_DATETIME_TYPE;
-    } else static if (is(ti == Nullable!Date)) {
-        return PropertyMemberType.NULLABLE_DATE_TYPE;
-    } else static if (is(ti == Nullable!TimeOfDay)) {
-        return PropertyMemberType.NULLABLE_TIME_TYPE;
-    } else static if (is(ti == byte[])) {
-        return PropertyMemberType.BYTE_ARRAY_TYPE;
-    } else static if (is(ti == ubyte[])) {
-        return PropertyMemberType.UBYTE_ARRAY_TYPE;
-    } else static if (true) {
-        static assert (false, "Member " ~ m ~ " of class " ~ T.stringof ~ " has unsupported type " ~ ti.stringof);
-    }
-}
+enum PropertyMemberType getPropertyType(alias value) = getFieldTraits!value.propertyMemberType;
+enum PropertyMemberType getPropertyMemberType(T, string m) = getFieldTraits!(__traits(getMember, T, m)).propertyMemberType;
 
 string getPropertyReadCode(T, string m)() {
     return "entity." ~ m;
@@ -550,373 +661,24 @@ string getPropertyReadCode(alias T)() {
     return "entity." ~ T.stringof;
 }
 
-static immutable bool[] ColumnTypeCanHoldNulls = 
-[
-    false, //BOOL_TYPE     // bool
-    false, //BYTE_TYPE,    // byte
-    false, //SHORT_TYPE,   // short
-    false, //INT_TYPE,     // int
-    false, //LONG_TYPE,    // long
-    false, //UBYTE_TYPE,   // ubyte
-    false, //USHORT_TYPE,  // ushort
-    false, //UINT_TYPE,    // uint
-    false, //ULONG_TYPE,   // ulong
-    true, //NULLABLE_BYTE_TYPE,  // Nullable!byte
-    true, //NULLABLE_SHORT_TYPE, // Nullable!short
-    true, //NULLABLE_INT_TYPE,   // Nullable!int
-    true, //NULLABLE_LONG_TYPE,  // Nullable!long
-    true, //NULLABLE_UBYTE_TYPE, // Nullable!ubyte
-    true, //NULLABLE_USHORT_TYPE,// Nullable!ushort
-    true, //NULLABLE_UINT_TYPE,  // Nullable!uint
-    true, //NULLABLE_ULONG_TYPE, // Nullable!ulong
-    false,//FLOAT_TYPE,   // float
-    false,//DOUBLE_TYPE,   // double
-    true, //NULLABLE_FLOAT_TYPE, // Nullable!float
-    true, //NULLABLE_DOUBLE_TYPE,// Nullable!double
-    false, //STRING_TYPE   // string  -- treat as @NotNull by default
-    true, //NULLABLE_STRING_TYPE   // String
-    false, //SYSTIME_TYPE
-    false, //DATETIME_TYPE, // std.datetime.DateTime
-    false, //DATE_TYPE, // std.datetime.Date
-    false, //TIME_TYPE, // std.datetime.TimeOfDay
-    true, //NULLABLE_SYSTIME_TYPE
-    true, //NULLABLE_DATETIME_TYPE, // Nullable!std.datetime.DateTime
-    true, //NULLABLE_DATE_TYPE, // Nullable!std.datetime.Date
-    true, //NULLABLE_TIME_TYPE, // Nullable!std.datetime.TimeOfDay
-    true, //BYTE_ARRAY_TYPE, // byte[]
-    true, //UBYTE_ARRAY_TYPE, // ubyte[]
-    
-    false, //LONG_CONVERTIBLE_TYPE,                      // @convBy!Proxy for long
-    false, //ULONG_CONVERTIBLE_TYPE,                     // @convBy!Proxy for ulong
-    true,  //NULLABLE_LONG_CONVERTIBLE_TYPE,             // @convBy!Proxy for Nullable!long
-    true,  //NULLABLE_ULONG_CONVERTIBLE_TYPE,            // @convBy!Proxy for Nullable!ulong
-    false, //DOUBLE_CONVERTIBLE_TYPE,                    // @convBy!Proxy for double
-    true,  //NULLABLE_DOUBLE_CONVERTIBLE_TYPE,           // @convBy!Proxy for Nullable!double
-    false, //STRING_CONVERTIBLE_TYPE,                    // @convBy!Proxy for string
-    true,  //NULLABLE_STRING_CONVERTIBLE_TYPE,           // @convBy!Proxy for String
-    true,  //BYTE_ARRAY_CONVERTIBLE_TYPE,                // @convBy!Proxy for byte[]
-    true,  //UBYTE_ARRAY_CONVERTIBLE_TYPE,               // @convBy!Proxy for ubyte[]
-];
+enum bool columnTypeCanHoldNulls(alias value) = getFieldTraits!value.columnTypeCanHoldNulls;
+enum bool columnTypeCanHoldNulls(T, string m) = getFieldTraits!(__traits(getMember, T, m)).columnTypeCanHoldNulls;
 
-bool isColumnTypeNullableByDefault(T, string m)() {
-    return ColumnTypeCanHoldNulls[getPropertyMemberType!(T,m)];
-}
+enum bool isColumnTypeNullableByDefault(T, string m) = columnTypeCanHoldNulls!(T,m);
 
-static immutable string[] ColumnTypeKeyIsSetCode = 
-[
-    "(%s != 0)", //BOOL_TYPE     // bool
-    "(%s != 0)", //BYTE_TYPE,    // byte
-    "(%s != 0)", //SHORT_TYPE,   // short
-    "(%s != 0)", //INT_TYPE,     // int
-    "(%s != 0)", //LONG_TYPE,    // long
-    "(%s != 0)", //UBYTE_TYPE,   // ubyte
-    "(%s != 0)", //USHORT_TYPE,  // ushort
-    "(%s != 0)", //UINT_TYPE,    // uint
-    "(%s != 0)", //ULONG_TYPE,   // ulong
-    "(!%s.isNull)", //NULLABLE_BYTE_TYPE,  // Nullable!byte
-    "(!%s.isNull)", //NULLABLE_SHORT_TYPE, // Nullable!short
-    "(!%s.isNull)", //NULLABLE_INT_TYPE,   // Nullable!int
-    "(!%s.isNull)", //NULLABLE_LONG_TYPE,  // Nullable!long
-    "(!%s.isNull)", //NULLABLE_UBYTE_TYPE, // Nullable!ubyte
-    "(!%s.isNull)", //NULLABLE_USHORT_TYPE,// Nullable!ushort
-    "(!%s.isNull)", //NULLABLE_UINT_TYPE,  // Nullable!uint
-    "(!%s.isNull)", //NULLABLE_ULONG_TYPE, // Nullable!ulong
-    "(%s != 0)",//FLOAT_TYPE,   // float
-    "(%s != 0)",//DOUBLE_TYPE,   // double
-    "(!%s.isNull)", //NULLABLE_FLOAT_TYPE, // Nullable!float
-    "(!%s.isNull)", //NULLABLE_DOUBLE_TYPE,// Nullable!double
-    "(%s !is null)", //STRING_TYPE   // string
-    "(%s !is null)", //NULLABLE_STRING_TYPE   // String
-    "(%s != SysTime())", //SYSTIME_TYPE, // std.datetime.systime : SysTime
-    "(%s != DateTime())", //DATETIME_TYPE, // std.datetime.DateTime
-    "(%s != Date())", //DATE_TYPE, // std.datetime.Date
-    "(%s != TimeOfDay())", //TIME_TYPE, // std.datetime.TimeOfDay
-    "(!%s.isNull)", //NULLABLE_SYSTIME_TYPE, // Nullable!std.datetime.systime.SysTime
-    "(!%s.isNull)", //NULLABLE_DATETIME_TYPE, // Nullable!std.datetime.DateTime
-    "(!%s.isNull)", //NULLABLE_DATE_TYPE, // Nullable!std.datetime.Date
-    "(!%s.isNull)", //NULLABLE_TIME_TYPE, // Nullable!std.datetime.TimeOfDay
-    "(%s !is null)", //BYTE_ARRAY_TYPE, // byte[]
-    "(%s !is null)", //UBYTE_ARRAY_TYPE, // ubyte[]
-    
-    "(%s != 0)",     //LONG_CONVERTIBLE_TYPE,                      // @convBy!Proxy for long
-    "(%s != 0)",     //ULONG_CONVERTIBLE_TYPE,                     // @convBy!Proxy for ulong
-    "(!%s.isNull)",  //NULLABLE_LONG_CONVERTIBLE_TYPE,             // @convBy!Proxy for Nullable!long
-    "(!%s.isNull)",  //NULLABLE_ULONG_CONVERTIBLE_TYPE,            // @convBy!Proxy for Nullable!ulong
-    "(%s != 0)",     //DOUBLE_CONVERTIBLE_TYPE,                    // @convBy!Proxy for double
-    "(!%s.isNull)",  //NULLABLE_DOUBLE_CONVERTIBLE_TYPE,           // @convBy!Proxy for Nullable!double
-    "(%s !is null)", //STRING_CONVERTIBLE_TYPE,                    // @convBy!Proxy for string
-    "(!%s.isNull)",  //NULLABLE_STRING_CONVERTIBLE_TYPE,           // @convBy!Proxy for String
-    "(%s !is null)", //BYTE_ARRAY_CONVERTIBLE_TYPE,                // @convBy!Proxy for byte[]
-    "(%s !is null)", //UBYTE_ARRAY_CONVERTIBLE_TYPE,               // @convBy!Proxy for ubyte[]
-];
 
-string getColumnTypeKeyIsSetCode(T, string m)() {
-    return substituteParam(ColumnTypeKeyIsSetCode[getPropertyMemberType!(T,m)()], getPropertyReadCode!(T,m)());
-}
+enum string getColumnTypeKeyIsSetCode(T, string m) = getFieldTraits!(__traits(getMember, T, m)).columnTypeKeyIsSetCode;
+enum string getColumnTypeIsNullCode(T, string m)   = getFieldTraits!(__traits(getMember, T, m)).columnTypeIsNullCode;
 
-static immutable string[] ColumnTypeIsNullCode = 
-[
-    "(false)", //BOOL_TYPE     // bool
-    "(false)", //BYTE_TYPE,    // byte
-    "(false)", //SHORT_TYPE,   // short
-    "(false)", //INT_TYPE,     // int
-    "(false)", //LONG_TYPE,    // long
-    "(false)", //UBYTE_TYPE,   // ubyte
-    "(false)", //USHORT_TYPE,  // ushort
-    "(false)", //UINT_TYPE,    // uint
-    "(false)", //ULONG_TYPE,   // ulong
-    "(%s.isNull)", //NULLABLE_BYTE_TYPE,  // Nullable!byte
-    "(%s.isNull)", //NULLABLE_SHORT_TYPE, // Nullable!short
-    "(%s.isNull)", //NULLABLE_INT_TYPE,   // Nullable!int
-    "(%s.isNull)", //NULLABLE_LONG_TYPE,  // Nullable!long
-    "(%s.isNull)", //NULLABLE_UBYTE_TYPE, // Nullable!ubyte
-    "(%s.isNull)", //NULLABLE_USHORT_TYPE,// Nullable!ushort
-    "(%s.isNull)", //NULLABLE_UINT_TYPE,  // Nullable!uint
-    "(%s.isNull)", //NULLABLE_ULONG_TYPE, // Nullable!ulong
-    "(false)",//FLOAT_TYPE,   // float
-    "(false)",//DOUBLE_TYPE,   // double
-    "(%s.isNull)", //NULLABLE_FLOAT_TYPE, // Nullable!float
-    "(%s.isNull)", //NULLABLE_DOUBLE_TYPE,// Nullable!double
-    "(%s is null)", //STRING_TYPE   // string
-    "(%s is null)", //NULLABLE_STRING_TYPE   // String
-    "(false)", //SYSTIME_TYPE
-    "(false)", //DATETIME_TYPE, // std.datetime.DateTime
-    "(false)", //DATE_TYPE, // std.datetime.Date
-    "(false)", //TIME_TYPE, // std.datetime.TimeOfDay
-    "(%s.isNull)", //NULLABLE_SYSTIME_TYPE
-    "(%s.isNull)", //NULLABLE_DATETIME_TYPE, // Nullable!std.datetime.DateTime
-    "(%s.isNull)", //NULLABLE_DATE_TYPE, // Nullable!std.datetime.Date
-    "(%s.isNull)", //NULLABLE_TIME_TYPE, // Nullable!std.datetime.TimeOfDay
-    "(%s is null)", //BYTE_ARRAY_TYPE, // byte[]
-    "(%s is null)", //UBYTE_ARRAY_TYPE, // ubyte[]
-    
-    "(false)",      //LONG_CONVERTIBLE_TYPE,                      // @convBy!Proxy for long
-    "(false)",      //ULONG_CONVERTIBLE_TYPE,                     // @convBy!Proxy for ulong
-    "(%s.isNull)",  //NULLABLE_LONG_CONVERTIBLE_TYPE,             // @convBy!Proxy for Nullable!long
-    "(%s.isNull)",  //NULLABLE_ULONG_CONVERTIBLE_TYPE,            // @convBy!Proxy for Nullable!ulong
-    "(false)",      //DOUBLE_CONVERTIBLE_TYPE,                    // @convBy!Proxy for double
-    "(%s.isNull)",  //NULLABLE_DOUBLE_CONVERTIBLE_TYPE,           // @convBy!Proxy for Nullable!double
-    "(%s is null)", //STRING_CONVERTIBLE_TYPE,                    // @convBy!Proxy for string
-    "(%s.isNull)",  //NULLABLE_STRING_CONVERTIBLE_TYPE,           // @convBy!Proxy for String
-    "(%s is null)", //BYTE_ARRAY_CONVERTIBLE_TYPE,                // @convBy!Proxy for byte[]
-    "(%s is null)", //UBYTE_ARRAY_CONVERTIBLE_TYPE,               // @convBy!Proxy for ubyte[]
-];
 
-string getColumnTypeIsNullCode(T, string m)() {
-    return substituteParam(ColumnTypeIsNullCode[getPropertyMemberType!(T,m)()], getPropertyReadCode!(T,m)());
-}
-
-static immutable string[] ColumnTypeSetNullCode = 
-[
-    "bool nv;", // BOOL_TYPE   // bool
-    "byte nv = 0;", //BYTE_TYPE,    // byte
-    "short nv = 0;", //SHORT_TYPE,   // short
-    "int nv = 0;", //INT_TYPE,     // int
-    "long nv = 0;", //LONG_TYPE,    // long
-    "ubyte nv = 0;", //UBYTE_TYPE,   // ubyte
-    "ushort nv = 0;", //USHORT_TYPE,  // ushort
-    "uint nv = 0;", //UINT_TYPE,    // uint
-    "ulong nv = 0;", //ULONG_TYPE,   // ulong
-    "Nullable!byte nv;", //NULLABLE_BYTE_TYPE,  // Nullable!byte
-    "Nullable!short nv;", //NULLABLE_SHORT_TYPE, // Nullable!short
-    "Nullable!int nv;", //NULLABLE_INT_TYPE,   // Nullable!int
-    "Nullable!long nv;", //NULLABLE_LONG_TYPE,  // Nullable!long
-    "Nullable!ubyte nv;", //NULLABLE_UBYTE_TYPE, // Nullable!ubyte
-    "Nullable!ushort nv;", //NULLABLE_USHORT_TYPE,// Nullable!ushort
-    "Nullable!uint nv;", //NULLABLE_UINT_TYPE,  // Nullable!uint
-    "Nullable!ulong nv;", //NULLABLE_ULONG_TYPE, // Nullable!ulong
-    "float nv = 0;",//FLOAT_TYPE,   // float
-    "double nv = 0;",//DOUBLE_TYPE,   // double
-    "Nullable!float nv;", //NULLABLE_FLOAT_TYPE, // Nullable!float
-    "Nullable!double nv;", //NULLABLE_DOUBLE_TYPE,// Nullable!double
-    "string nv;", //STRING_TYPE   // string
-    "string nv;", //NULLABLE_STRING_TYPE   // String
-    "SysTime nv;", //SYSTIME_TYPE
-    "DateTime nv;", //DATETIME_TYPE, // std.datetime.DateTime
-    "Date nv;", //DATE_TYPE, // std.datetime.Date
-    "TimeOfDay nv;", //TIME_TYPE, // std.datetime.TimeOfDay
-    "Nullable!SysTime nv;", //NULLABLE_SYSTIME_TYPE
-    "Nullable!DateTime nv;", //NULLABLE_DATETIME_TYPE, // Nullable!std.datetime.DateTime
-    "Nullable!Date nv;", //NULLABLE_DATE_TYPE, // Nullable!std.datetime.Date
-    "Nullable!TimeOfDay nv;", //NULLABLE_TIME_TYPE, // Nullable!std.datetime.TimeOfDay
-    "byte[] nv = null;", //BYTE_ARRAY_TYPE, // byte[]
-    "ubyte[] nv = null;", //UBYTE_ARRAY_TYPE, // ubyte[]
-    
-    "long nv = 0;",        //LONG_CONVERTIBLE_TYPE,                      // @convBy!Proxy for long
-    "ulong nv = 0;",       //ULONG_CONVERTIBLE_TYPE,                     // @convBy!Proxy for ulong
-    "Nullable!long nv;",   //NULLABLE_LONG_CONVERTIBLE_TYPE,             // @convBy!Proxy for Nullable!long
-    "Nullable!ulong nv;",  //NULLABLE_ULONG_CONVERTIBLE_TYPE,            // @convBy!Proxy for Nullable!ulong
-    "double nv = 0;",      //DOUBLE_CONVERTIBLE_TYPE,                    // @convBy!Proxy for double
-    "Nullable!double nv;", //NULLABLE_DOUBLE_CONVERTIBLE_TYPE,           // @convBy!Proxy for Nullable!double
-    "string nv;",          //STRING_CONVERTIBLE_TYPE,                    // @convBy!Proxy for string
-    "string nv;",          //NULLABLE_STRING_CONVERTIBLE_TYPE,           // @convBy!Proxy for String
-    "byte[] nv = null;",   //BYTE_ARRAY_CONVERTIBLE_TYPE,                // @convBy!Proxy for byte[]
-    "ubyte[] nv = null;",  //UBYTE_ARRAY_CONVERTIBLE_TYPE,               // @convBy!Proxy for ubyte[]
-];
-
-static immutable string[] ColumnTypePropertyToVariant = 
-[
-    "Variant(%s)", //BOOL_TYPE     // bool
-    "Variant(%s)", //BYTE_TYPE,    // byte
-    "Variant(%s)", //SHORT_TYPE,   // short
-    "Variant(%s)", //INT_TYPE,     // int
-    "Variant(%s)", //LONG_TYPE,    // long
-    "Variant(%s)", //UBYTE_TYPE,   // ubyte
-    "Variant(%s)", //USHORT_TYPE,  // ushort
-    "Variant(%s)", //UINT_TYPE,    // uint
-    "Variant(%s)", //ULONG_TYPE,   // ulong
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_BYTE_TYPE,  // Nullable!byte
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_SHORT_TYPE, // Nullable!short
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_INT_TYPE,   // Nullable!int
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_LONG_TYPE,  // Nullable!long
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_UBYTE_TYPE, // Nullable!ubyte
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_USHORT_TYPE,// Nullable!ushort
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_UINT_TYPE,  // Nullable!uint
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_ULONG_TYPE, // Nullable!ulong
-    "Variant(%s)",//FLOAT_TYPE,   // float
-    "Variant(%s)",//DOUBLE_TYPE,   // double
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_FLOAT_TYPE, // Nullable!float
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_DOUBLE_TYPE,// Nullable!double
-    "Variant(%s)", //STRING_TYPE   // string
-    "Variant(%s)", //NULLABLE_STRING_TYPE   // String
-    "Variant(%s)", //SYSTIME_TYPE
-    "Variant(%s)", //DATETIME_TYPE, // std.datetime.DateTime
-    "Variant(%s)", //DATE_TYPE, // std.datetime.Date
-    "Variant(%s)", //TIME_TYPE, // std.datetime.TimeOfDay
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_SYSTIME_TYPE
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_DATETIME_TYPE, // Nullable!std.datetime.DateTime
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_DATE_TYPE, // Nullable!std.datetime.Date
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_TIME_TYPE, // Nullable!std.datetime.TimeOfDay
-    "Variant(%s)", //BYTE_ARRAY_TYPE, // byte[]
-    "Variant(%s)", //UBYTE_ARRAY_TYPE, // ubyte[]
-    
-    "Variant(%s)", //LONG_CONVERTIBLE_TYPE,                      // @convBy!Proxy for long
-    "Variant(%s)", //ULONG_CONVERTIBLE_TYPE,                     // @convBy!Proxy for ulong
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_LONG_CONVERTIBLE_TYPE,             // @convBy!Proxy for Nullable!long
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_ULONG_CONVERTIBLE_TYPE,            // @convBy!Proxy for Nullable!ulong
-    "Variant(%s)", //DOUBLE_CONVERTIBLE_TYPE,                    // @convBy!Proxy for double
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_DOUBLE_CONVERTIBLE_TYPE,           // @convBy!Proxy for Nullable!double
-    "Variant(%s)", //STRING_CONVERTIBLE_TYPE,                    // @convBy!Proxy for string
-    "(%s.isNull ? Variant(null) : Variant(%s.get()))", //NULLABLE_STRING_CONVERTIBLE_TYPE,           // @convBy!Proxy for String
-    "Variant(%s)", //BYTE_ARRAY_CONVERTIBLE_TYPE,                // @convBy!Proxy for byte[]
-    "Variant(%s)", //UBYTE_ARRAY_CONVERTIBLE_TYPE,               // @convBy!Proxy for ubyte[]
-];
-
-static immutable string[] ColumnTypeDatasetReaderCode = 
-[
-    "r.getBoolean(index)", //BOOL_TYPE,    // bool
-    "r.getByte(index)", //BYTE_TYPE,    // byte
-    "r.getShort(index)", //SHORT_TYPE,   // short
-    "r.getInt(index)", //INT_TYPE,     // int
-    "r.getLong(index)", //LONG_TYPE,    // long
-    "r.getUbyte(index)", //UBYTE_TYPE,   // ubyte
-    "r.getUshort(index)", //USHORT_TYPE,  // ushort
-    "r.getUint(index)", //UINT_TYPE,    // uint
-    "r.getUlong(index)", //ULONG_TYPE,   // ulong
-    "Nullable!byte(r.getByte(index))", //NULLABLE_BYTE_TYPE,  // Nullable!byte
-    "Nullable!short(r.getShort(index))", //NULLABLE_SHORT_TYPE, // Nullable!short
-    "Nullable!int(r.getInt(index))", //NULLABLE_INT_TYPE,   // Nullable!int
-    "Nullable!long(r.getLong(index))", //NULLABLE_LONG_TYPE,  // Nullable!long
-    "Nullable!ubyte(r.getUbyte(index))", //NULLABLE_UBYTE_TYPE, // Nullable!ubyte
-    "Nullable!ushort(r.getUshort(index))", //NULLABLE_USHORT_TYPE,// Nullable!ushort
-    "Nullable!uint(r.getUint(index))", //NULLABLE_UINT_TYPE,  // Nullable!uint
-    "Nullable!ulong(r.getUlong(index))", //NULLABLE_ULONG_TYPE, // Nullable!ulong
-    "r.getFloat(index)",//FLOAT_TYPE,   // float
-    "r.getDouble(index)",//DOUBLE_TYPE,   // double
-    "Nullable!float(r.getFloat(index))", //NULLABLE_FLOAT_TYPE, // Nullable!float
-    "Nullable!double(r.getDouble(index))", //NULLABLE_DOUBLE_TYPE,// Nullable!double
-    "r.getString(index)", //STRING_TYPE   // string
-    "r.getString(index)", //NULLABLE_STRING_TYPE   // String
-    "r.getSysTime(index)", //SYSTIME_TYPE
-    "r.getDateTime(index)", //DATETIME_TYPE, // std.datetime.DateTime
-    "r.getDate(index)", //DATE_TYPE, // std.datetime.Date
-    "r.getTime(index)", //TIME_TYPE, // std.datetime.TimeOfDay
-    "Nullable!SysTime(r.getSysTime(index))", //NULLABLE_SYSTIME_TYPE
-    "Nullable!DateTime(r.getDateTime(index))", //NULLABLE_DATETIME_TYPE, // Nullable!std.datetime.DateTime
-    "Nullable!Date(r.getDate(index))", //NULLABLE_DATE_TYPE, // Nullable!std.datetime.Date
-    "Nullable!TimeOfDay(r.getTime(index))", //NULLABLE_TIME_TYPE, // Nullable!std.datetime.TimeOfDay
-    "r.getBytes(index)", //BYTE_ARRAY_TYPE, // byte[]
-    "r.getUbytes(index)", //UBYTE_ARRAY_TYPE, // ubyte[]
-    
-    "r.getLong(index)", //LONG_CONVERTIBLE_TYPE,                      // @convBy!Proxy for long
-    "r.getUlong(index)", //ULONG_CONVERTIBLE_TYPE,                     // @convBy!Proxy for ulong
-    "Nullable!(r.getLong(index))", //NULLABLE_LONG_CONVERTIBLE_TYPE,             // @convBy!Proxy for Nullable!long
-    "Nullable!(r.getUlong(index))", //NULLABLE_ULONG_CONVERTIBLE_TYPE,            // @convBy!Proxy for Nullable!ulong
-    "r.getDouble(index)", //DOUBLE_CONVERTIBLE_TYPE,                    // @convBy!Proxy for double
-    "Nullable!(r.getDouble(index))", //NULLABLE_DOUBLE_CONVERTIBLE_TYPE,           // @convBy!Proxy for Nullable!double
-    "r.getString(index)", //STRING_CONVERTIBLE_TYPE,                    // @convBy!Proxy for string
-    "r.getString(index)", //NULLABLE_STRING_CONVERTIBLE_TYPE,           // @convBy!Proxy for String
-    "r.getBytes(index)", //BYTE_ARRAY_CONVERTIBLE_TYPE,                // @convBy!Proxy for byte[]
-    "r.getUbytes(index)", //UBYTE_ARRAY_CONVERTIBLE_TYPE,               // @convBy!Proxy for ubyte[]
-];
-
-string getConvertibleTypeCode(T, string m)() if (hasConvBy!(__traits(getMember, T, m))) {
-    mixin(`alias member = T.` ~ m ~ ";"); // alias member = __traits(getMember, T, m);
-    static if (isConvertible!(member, long)) {
-        return "long";
-    } else static if (isConvertible!(member, ulong)) {
-        return "ulong";
-    } else static if (isConvertible!(member, Nullable!long)) {
-        return "Nullable!long";
-    } else static if (isConvertible!(member, Nullable!ulong)) {
-        return "Nullable!ulong";
-    } else static if (isConvertible!(member, double)) {
-        return "double";
-    } else static if (isConvertible!(member, Nullable!double)) {
-        return "Nullable!double";
-    } else static if (isConvertible!(member, string)) {
-        return "string";
-    } else static if (isConvertible!(member, String)) {
-        return "String";
-    } else static if (isConvertible!(member, byte[])) {
-        return "byte[]";
-    } else static if (isConvertible!(member, ubyte[])) {
-        return "ubyte[]";
-    } else static if (true) {
-        static assert (false, "Member " ~ m ~ " of class " ~ T.stringof ~ " has unsupported type " ~ typeof(member).stringof);
-    }
-}
-template getConvertibleType(alias value) if (hasConvBy!(value)) {
-    static if (isConvertible!(value, long)) {
-        alias getConvertibleType = long;
-    } else static if (isConvertible!(value, ulong)) {
-        alias getConvertibleType = ulong;
-    } else static if (isConvertible!(value, Nullable!long)) {
-        alias getConvertibleType = Nullable!long;
-    } else static if (isConvertible!(value, Nullable!ulong)) {
-        alias getConvertibleType = Nullable!ulong;
-    } else static if (isConvertible!(value, double)) {
-        alias getConvertibleType = double;
-    } else static if (isConvertible!(value, Nullable!double)) {
-        alias getConvertibleType = Nullable!double;
-    } else static if (isConvertible!(value, string)) {
-        alias getConvertibleType = string;
-    } else static if (isConvertible!(value, String)) {
-        alias getConvertibleType = String;
-    } else static if (isConvertible!(value, byte[])) {
-        alias getConvertibleType = byte[];
-    } else static if (isConvertible!(value, ubyte[])) {
-        alias getConvertibleType = ubyte[];
-    } else static if (true) {
-        static assert (false, "Member " ~ m ~ " of class " ~ T.stringof ~ " has unsupported type " ~ typeof(member).stringof);
-    }
-}
-
-alias getConvertibleType(T, string m)  = getConvertibleType!(__traits(getMember, T, m));
-
-string getColumnTypeDatasetReadCode(T, string m)() {
-    return ColumnTypeDatasetReaderCode[getPropertyMemberType!(T,m)()];
-}
-
-string getVarTypeDatasetReadCode(alias arg)() {
-    return ColumnTypeDatasetReaderCode[getPropertyType!arg];
-}
+enum string getColumnTypeDatasetReadCode(T, string m) = getFieldTraits!(__traits(getMember, T, m)).columnTypeDatasetReaderCode;
+enum string getVarTypeDatasetReadCode(alias arg)      = getFieldTraits!arg.columnTypeDatasetReaderCode;
 
 string getPropertyWriteCode(T, string m)() {
     //immutable PropertyMemberKind kind = getPropertyMemberKind!(T, m)();
-    immutable string nullValueCode = ColumnTypeSetNullCode[getPropertyMemberType!(T,m)()];
-    immutable string datasetReader = "(!r.isNull(index) ? " ~ getColumnTypeDatasetReadCode!(T, m)() ~ " : nv)";
-    static if (hasConvBy!(__traits(getMember, T, m)) && canConvFrom!(__traits(getMember, T, m), getConvertibleType!(T, m))) {
+    immutable string nullValueCode = getFieldTraits!(__traits(getMember, T, m)).columnTypeSetNullCode;
+    immutable string datasetReader = "(!r.isNull(index) ? " ~ getColumnTypeDatasetReadCode!(T, m) ~ " : nv)";
+    static if (hasConvertibleType!(__traits(getMember, T, m))) {
         return nullValueCode ~ "convertFrom!(entity." ~ m ~ ")("~ datasetReader ~ ", entity." ~ m ~ ");";
     } else {
         return nullValueCode ~ "entity." ~ m ~ " = " ~ datasetReader ~ ";";
@@ -926,30 +688,86 @@ string getPropertyWriteCode(T, string m)() {
 string getArgsWriteCode(alias value)() {
     alias T = typeof(value);
     //immutable PropertyMemberKind kind = getPropertyMemberKind!(T, m)();
-    immutable string nullValueCode = ColumnTypeSetNullCode[getPropertyType!value];
+    immutable string nullValueCode = getFieldTraits!value.columnTypeSetNullCode;
     immutable string datasetReader = "(!r.isNull(index) ? " ~ getVarTypeDatasetReadCode!value ~ " : nv)";
-    static if (hasConvBy!value && canConvFrom!(value, getConvertibleType!value)) {
+    static if (hasConvertibleType!value) {
         return nullValueCode ~ "convertFrom!(a)(" ~ datasetReader ~ ", a);";
     } else {
         return nullValueCode ~ "a = " ~ datasetReader ~ ";";
     }
 }
 
+template isValidFieldMember(T, string m) {
+    static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
+        // skip non-public members
+        static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
+            static if (isSupportedSimpleType!(T, m) && !hasIgnore!(__traits(getMember, T, m))) {
+                enum bool isValidFieldMember = true;
+            } else {
+                enum bool isValidFieldMember = false;
+            }
+        } else {
+            enum bool isValidFieldMember = false;
+        }
+    } else {
+        enum bool isValidFieldMember = false;
+    }
+}
+
+template isSupportedDataType(T) {
+    import std.meta: allSatisfy, Filter;
+    enum bool isNotIgnore(string m) = !hasIgnore!(__traits(getMember, T, m));
+    alias nonIgnoredMembers = Filter!(isNotIgnore, FieldNameTuple!T);
+    enum bool isSupportedSimpleTypeMember(string m) = isSupportedSimpleType!(T, m);
+    enum bool isSupportedDataType = allSatisfy!(isSupportedSimpleTypeMember, nonIgnoredMembers);
+}
+
+unittest {
+    struct Data1 {int a; int b;}
+    struct Data2 {int a; int* b;}
+    static assert( isSupportedDataType!Data1);
+    static assert(!isSupportedDataType!Data2);
+}
+
+template getColumnNameForMember(T, string m) {
+    static if (hasColumnName!(__traits(getMember, T, m))) {
+        enum string getColumnNameForMember = getColumnName!(__traits(getMember, T, m));
+    } else {
+        enum string getColumnNameForMember = m;
+    }
+}
+
+template getMemberNamesAt(T, alias uda) {
+    import std.meta: staticMap, Filter;
+    alias symbolsByUDA = getSymbolsByUDA!(T, uda);
+    alias symbolsNameByUDA = staticMap!(getMemberNamesAt_getName, symbolsByUDA);
+    alias isValidMember(string m) = isValidFieldMember!(T, m);
+    alias getMemberNamesAt = Filter!(isValidMember, symbolsNameByUDA);
+}
+enum string getMemberNamesAt_getName(alias member) = member.stringof;
+
+template getColumnNamesAt(T, alias uda) {
+    enum string getColumnNameFromMember(string m) = getColumnNameForMember!(T, m);
+    alias getColumnNamesAt = staticMap!(getColumnNameFromMember, getMemberNamesAt!(T, uda));
+}
+
+unittest {
+    enum { x, y }
+    struct Data1 {@x int a; @x @y @columnName("xxx") int b; @y @ignore string c;}
+    static assert(getColumnNamesAt!(Data1, x).length == 2);
+    static assert(getColumnNamesAt!(Data1, x)[0] == "a");
+    static assert(getColumnNamesAt!(Data1, x)[1] == "xxx");
+    static assert(getColumnNamesAt!(Data1, y).length == 1);
+    static assert(getColumnNamesAt!(Data1, y)[0] == "xxx");
+}
+
+
 /// returns array of field names
-string[] getColumnNamesForType(T)()  if (__traits(isPOD, T)) {
+string[] getColumnNamesForType(T)()  if (isSupportedDataType!T) {
     string[] res;
     foreach(m; FieldNameTuple!T) {
-        static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
-            // skip non-public members
-            static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
-                static if (isSupportedSimpleType!(T, m) && !hasIgnore!(__traits(getMember, T, m))) {
-                    static if (hasColumnName!(__traits(getMember, T, m))) {
-                        res ~= getColumnName!(__traits(getMember, T, m));
-                    } else {
-                        res ~= m;
-                    }
-                }
-            }
+        static if (isValidFieldMember!(T, m)) {
+            res ~= getColumnNameForMember!(T, m);
         }
     }
     return res;
@@ -962,13 +780,8 @@ string getColumnReadCode(T, string m)() {
 string getAllColumnsReadCode(T)() {
     string res = "int index = 1;\n";
     foreach(m; FieldNameTuple!T) {
-        static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
-            // skip non-public members
-            static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
-                static if (isSupportedSimpleType!(T, m) && !hasIgnore!(__traits(getMember, T, m))) {
-                    res ~= getColumnReadCode!(T, m);
-                }
-            }
+        static if (isValidFieldMember!(T, m)) {
+            res ~= getColumnReadCode!(T, m);
         }
     }
     return res;
@@ -988,8 +801,8 @@ unittest {
         string name;
         int flags;
     }
-    //pragma(msg, "nullValueCode = " ~ ColumnTypeSetNullCode[getPropertyMemberType!(User1, "id")()]);
-    //pragma(msg, "datasetReader = " ~ getColumnTypeDatasetReadCode!(User1, "id")());
+    //pragma(msg, "nullValueCode = " ~ getFieldTraits!(User1.id).columnTypeSetNullCode);
+    //pragma(msg, "datasetReader = " ~ getColumnTypeDatasetReadCode!(User1, "id"));
     //pragma(msg, "getPropertyWriteCode: " ~ getPropertyWriteCode!(User1, "id"));
     //pragma(msg, "getAllColumnsReadCode:\n" ~ getAllColumnsReadCode!(User1));
     //static assert(getPropertyWriteCode!(User1, "id") == "long nv = 0;entity.id = (!r.isNull(index) ? r.getLong(index) : nv);");
@@ -1006,16 +819,16 @@ unittest {
         @convBy!Proxy
         int flags;
     }
-    static assert(getPropertyMemberType!(User1, "id")() == PropertyMemberType.LONG_TYPE);
-    static assert(getPropertyMemberType!(User1, "name")() == PropertyMemberType.STRING_TYPE);
-    static assert(getPropertyMemberType!(User1, "flags")() == PropertyMemberType.STRING_CONVERTIBLE_TYPE);
+    static assert(getPropertyMemberType!(User1, "id") == PropertyMemberType.LONG_TYPE);
+    static assert(getPropertyMemberType!(User1, "name") == PropertyMemberType.STRING_TYPE);
+    static assert(getPropertyMemberType!(User1, "flags") == PropertyMemberType.STRING_CONVERTIBLE_TYPE);
     //pragma(msg, "getPropertyMemberType unit test passed");
 }
 
 
 
 /// returns table name for struct type
-string getTableNameForType(T)() if (__traits(isPOD, T)) {
+string getTableNameForType(T)() if (isSupportedDataType!T) {
     static if (hasTableName!T) {
         return getTableName!T;
     } else {
@@ -1070,12 +883,12 @@ unittest {
     static assert(generateSelectSQL!User2() == "SELECT id,name_of_user,flags FROM user_2");
 }
 
-string joinFieldList(fieldList...)() {
+string joinFieldList(T, fieldList...)() {
     string res;
-    foreach(f; fieldList) {
+    static foreach(f; fieldList) {
         if (res.length)
             res ~= ",";
-        res ~= f;
+        res ~= getColumnNameForMember!(T, f);
     }
     return res;
 }
@@ -1083,7 +896,7 @@ string joinFieldList(fieldList...)() {
 /// returns "SELECT <field list> FROM <table name>"
 string generateSelectSQL(T, fieldList...)() {
     string res = "SELECT ";
-    res ~= joinFieldList!fieldList;
+    res ~= joinFieldList!(T, fieldList);
     res ~= " FROM " ~ getTableNameForType!(T)();
     return res;
 }
@@ -1220,9 +1033,9 @@ string getColumnTypeDatasetReadCodeByName(T, string m)() {
 }
 
 string getPropertyWriteCodeByName(T, string m)() {
-    immutable string nullValueCode = ColumnTypeSetNullCode[getPropertyMemberType!(T,m)()];
+    immutable string nullValueCode = getFieldTraits!(__traits(getMember, T, m)).columnTypeSetNullCode;
     mixin(`alias value = T.` ~ m ~ ";"); // alias value = __traits(getMember, T, m);
-    static if (hasConvBy!value && canConvFrom!(value, getConvertibleType!value)) {
+    static if (hasConvertibleType!value) {
         immutable string propertyWriter = nullValueCode
                 ~ "convertFrom!(entity." ~ m ~ ", " ~ getConvertibleTypeCode!value ~ ")"
                 ~             "(" ~ getColumnTypeDatasetReadCodeByName!(T, m)() ~ ", entity." ~ m ~ ");\n";
@@ -1240,13 +1053,8 @@ string getColumnReadCodeByName(T, string m)() {
 string getAllColumnsReadCodeByName(T)() {
     string res;
     foreach(m; FieldNameTuple!T) {
-        static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
-            // skip non-public members
-            static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
-                static if (isSupportedSimpleType!(T, m) && hasIgnore!(__traits(getMember, T, m))) {
-                    res ~= getColumnReadCodeByName!(T, m);
-                }
-            }
+        static if (isValidFieldMember!(T, m)) {
+            res ~= getColumnReadCodeByName!(T, m);
         }
     }
     return res;
@@ -1264,41 +1072,44 @@ T get(T)(ResultSet r) {
 }
 
 /// range for select query
-struct select(T, fieldList...) if (__traits(isPOD, T)) {
-  T entity;
-  private Statement stmt;
-  private ResultSet r;
-  static immutable selectSQL = generateSelectSQL!(T, fieldList)();
-  string whereCondSQL;
-  string orderBySQL;
-  this(Statement stmt) {
-    this.stmt = stmt;
-  }
-  ref select where(string whereCond) {
-    whereCondSQL = " WHERE " ~ whereCond;
-    return this;
-  }
-  ref select orderBy(string order) {
-    orderBySQL = " ORDER BY " ~ order;
-    return this;
-  }
-  ref T front() {
-    return entity;
-  }
-  void popFront() {
-  }
-  @property bool empty() {
-    if (!r)
-      r = stmt.executeQuery(selectSQL ~ whereCondSQL ~ orderBySQL);
-    if (!r.next())
-      return true;
-    mixin(getAllColumnsReadCode!(T, fieldList));
-    return false;
-  }
-  ~this() {
-    if (r)
-      r.close();
-  }
+auto select(T, fieldList...)(Statement stmt) if (isSupportedDataType!T) {
+    static struct Select {
+        T entity;
+        private Statement stmt;
+        private ResultSet r;
+        static immutable selectSQL = generateSelectSQL!(T, fieldList)();
+        string whereCondSQL;
+        string orderBySQL;
+        this(Statement stmt) {
+            this.stmt = stmt;
+        }
+        ref Select where(string whereCond) {
+            whereCondSQL = " WHERE " ~ whereCond;
+            return this;
+        }
+        ref Select orderBy(string order) {
+            orderBySQL = " ORDER BY " ~ order;
+            return this;
+        }
+        ref T front() {
+            return entity;
+        }
+        void popFront() {
+        }
+        @property bool empty() {
+            if (!r)
+                r = stmt.executeQuery(selectSQL ~ whereCondSQL ~ orderBySQL);
+            if (!r.next())
+                return true;
+            mixin(getAllColumnsReadCode!(T, fieldList));
+            return false;
+        }
+        ~this() {
+            if (r)
+                r.close();
+        }
+    }
+    return Select(stmt);
 }
 
 /// returns "INSERT INTO <table name> (<field list>) VALUES (value list)
@@ -1334,7 +1145,7 @@ string addFieldValue(T)(string m) {
   // return `values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";`;
 }
 
-bool insert(T)(Statement stmt, ref T o) if (__traits(isPOD, T)) {
+bool insert(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
     auto insertSQL = generateInsertSQL!(T)();
     string []values;
     foreach(m; FieldNameTuple!T) {
@@ -1377,7 +1188,7 @@ string addUpdateValue(T)(string m) {
   return `values ~= "` ~ m ~ `=\"" ~ to!string(o.` ~ m ~ `) ~ "\"";`;
 }
 
-bool update(T)(Statement stmt, ref T o) if (__traits(isPOD, T)) {
+bool update(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
     auto updateSQL = generateUpdateSQL!(T)();
     string []values;
     foreach(m; FieldNameTuple!T) {
@@ -1422,87 +1233,12 @@ string generateDeleteSQL(T)() {
   return res;
 }
 
-bool remove(T)(Statement stmt, ref T o) if (__traits(isPOD, T)) {
+bool remove(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
   auto deleteSQL = generateDeleteSQL!(T)();
   deleteSQL ~= mixin(`" WHERE id="~ to!string(o.id) ~ ";"`);
   Variant deleteId;
   stmt.executeUpdate(deleteSQL, deleteId);
   return true;
-}
-
-template isSupportedSimpleTypeRef(M) {
-    alias typeof(M) ti;
-    static if (!__traits(isRef, M)) {
-        enum bool isSupportedSimpleTypeRef = false;
-    } else static if (is(ti == bool)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == byte)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == short)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == int)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == long)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == ubyte)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == ushort)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == uint)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == ulong)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == float)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == double)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!byte)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!short)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!int)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!long)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!ubyte)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!ushort)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!uint)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!ulong)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!float)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!double)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == string)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == String)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == SysTime)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == DateTime)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Date)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == TimeOfDay)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!SysTime)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!DateTime)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!Date)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == Nullable!TimeOfDay)) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == byte[])) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (is(ti == ubyte[])) {
-        enum bool isSupportedSimpleTypeRef = true;
-    } else static if (true) {
-        enum bool isSupportedSimpleTypeRef = false;
-    }
 }
 
 // TODO: use better way to count parameters
@@ -1514,64 +1250,56 @@ int paramCount(destList...)() {
     return res;
 }
 
-bool isSupportedSimpleTypeRefList(destList...)() {
-    foreach(p; destList) {
-        static if (!isSupportedSimpleTypeRef!p) {
+auto ref select(Args...)(Statement stmt, string sql, ref Args args){ 
+    static struct Select {
+        Statement stmt;
+        string selectSQL;
+        void delegate(ResultSet r) _copyFunction;
+        ResultSet r;
+        int rowIndex;
+    
+        string whereCondSQL;
+        string orderBySQL;
+        ref Select where(string whereCond) {
+            whereCondSQL = " WHERE " ~ whereCond;
+            return this;
+        }
+        ref Select orderBy(string order) {
+            orderBySQL = " ORDER BY " ~ order;
+            return this;
+        }
+        int front() {
+            return rowIndex;
+        }
+        void popFront() {
+            rowIndex++;
+        }
+        @property bool empty() {
+            if (!r)
+                r = stmt.executeQuery(selectSQL ~ whereCondSQL ~ orderBySQL);
+            if (!r.next())
+                return true;
+            _copyFunction(r);
             return false;
         }
+        ~this() {
+            if (r)
+                r.close();
+        }
     }
-    return true;
+    return Select(stmt, sql, delegate(ResultSet r) {
+        static foreach(i, a; args) {{
+            static assert(__traits(isRef, a));
+            enum index = i + 1;
+            mixin(getArgsWriteCode!a);
+        }}
+    });
 }
 
-struct select(Args...)  {//if (isSupportedSimpleTypeRefList!Args())
-    private Statement stmt;
-    private ResultSet r;
-    private void delegate() _copyFunction;
-    private int rowIndex;
-    
-    this(Args...)(Statement stmt, string sql, ref Args args) {
-        this.stmt = stmt;
-        selectSQL = sql;
-        _copyFunction = delegate() {
-            static foreach(i, a; args) {{
-                int index = i + 1;
-                mixin(getArgsWriteCode!a);
-            }}
-        };
-    }
-
-    string selectSQL;
-    string whereCondSQL;
-    string orderBySQL;
-    ref select where(string whereCond) {
-        whereCondSQL = " WHERE " ~ whereCond;
-        return this;
-    }
-    ref select orderBy(string order) {
-        orderBySQL = " ORDER BY " ~ order;
-        return this;
-    }
-    int front() {
-        return rowIndex;
-    }
-    void popFront() {
-        rowIndex++;
-    }
-    @property bool empty() {
-        if (!r)
-            r = stmt.executeQuery(selectSQL ~ whereCondSQL ~ orderBySQL);
-        if (!r.next())
-            return true;
-        _copyFunction();
-        return false;
-    }
-    ~this() {
-        if (r)
-            r.close();
-    }
-
+// for compatibility
+template select() {
+    pragma(inline) auto select(Args...)(Statement stmt, string sql, ref Args args){ return .select!Args(stmt, sql, args); }
 }
-
 
 version (unittest) {
     import ddbc.common: ResultSetImpl;
@@ -1716,14 +1444,81 @@ unittest {
         int b;
     }
     
+    // select for Type
     foreach (e; stmt.select!Data.where("a == 1")) {
         assert(0);
     }
     assert(stmt.lastQuery.shrinkWhite == "SELECT a,b FROM data WHERE a == 1");
     Data dat;
     stmt.clear();
-    foreach (i; stmt.select!()("SELECT a,b    \n\t\tFROM data", dat.a, dat.b).where("a == 2").orderBy("b ASC")) {
+    foreach (i; stmt.select("SELECT a,b    \n\t\tFROM data", dat.a, dat.b).where("a == 2").orderBy("b ASC")) {
         assert(0);
     }
     assert(stmt.lastQuery.shrinkWhite == "SELECT a,b FROM data WHERE a == 2 ORDER BY b ASC");
+    
+    // select for args
+    stmt.resultSet.make(3, ["a", "b"], Variant(0));
+    stmt.resultSet[0][] = [Variant(20), Variant(1)];
+    stmt.resultSet[1][] = [Variant(20), Variant(2)];
+    stmt.resultSet[2][] = [Variant(20), Variant(3)];
+    Tuple!(int, Data)[] results;
+    foreach (r; stmt.select("SELECT a,b FROM data", dat.a, dat.b).where("a == 20").orderBy("b ASC")) {
+        results ~= tuple(r, dat);
+    }
+    assert(stmt.lastQuery.shrinkWhite == "SELECT a,b FROM data WHERE a == 20 ORDER BY b ASC");
+    assert(results.equal([tuple(0, Data(20, 1)), tuple(1, Data(20, 2)), tuple(2, Data(20, 3))]));
+    
+    // test for compatibility
+    stmt.clear();
+    foreach (i; stmt.select!()("SELECT a,b FROM data", dat.a, dat.b).where("a == 5")) {
+        assert(0);
+    }
+    assert(stmt.lastQuery.shrinkWhite == "SELECT a,b FROM data WHERE a == 5");
+    
+    
+    // test for uda
+    import std.stdio: File;
+    enum { sel1, sel2, }
+    
+    @tableName("user_2")
+    struct User2 {
+        static struct Proxy {
+            static string to(int x) { static import std.conv; return std.conv.to!string(x); }
+            static int from(string x) { static import std.conv; return std.conv.to!int(x); }
+        }
+                                    @sel1       long    id;
+        @columnName("name_of_user")       @sel2 string  name;
+        @ignore                                 File    file;
+        @convBy!Proxy               @sel1 @sel2
+                                                int     flags;
+    }
+    
+    import std.array: array;
+    alias U = User2;
+    alias V = Variant;
+    enum  f = File.init;
+    
+    stmt.resultSet.make(3, ["id", "name_of_user", "flags"]);
+    stmt.resultSet[0][] = [V(1), V("Alice"),     V("1011")];
+    stmt.resultSet[1][] = [V(2), V("Marisa"),    V("1110")];
+    stmt.resultSet[2][] = [V(3), V("Patchouli"), V("1001")];
+    auto users = stmt.select!U.array;
+    assert(stmt.lastQuery.shrinkWhite == "SELECT id,name_of_user,flags FROM user_2");
+    assert(users.equal([U(1, "Alice", f, 1011), U(2, "Marisa", f, 1110), U(3, "Patchouli", f, 1001)]));
+    
+    stmt.resultSet.make(3, ["id", "flags"]);
+    stmt.resultSet[0][] = [V(1), V("1011")];
+    stmt.resultSet[1][] = [V(2), V("1110")];
+    stmt.resultSet[2][] = [V(3), V("1001")];
+    users = stmt.select!(U, getMemberNamesAt!(U, sel1)).array;
+    assert(stmt.lastQuery.shrinkWhite == "SELECT id,flags FROM user_2");
+    assert(users.equal([U(1, null, f, 1011), U(2, null, f, 1110), U(3, null, f, 1001)]));
+    
+    stmt.resultSet.make(3, ["name_of_user", "flags"]);
+    stmt.resultSet[0][] = [V("Alice"),     V("1011")];
+    stmt.resultSet[1][] = [V("Marisa"),    V("1110")];
+    stmt.resultSet[2][] = [V("Patchouli"), V("1001")];
+    users = stmt.select!(U, getMemberNamesAt!(U, sel2)).array;
+    assert(stmt.lastQuery.shrinkWhite == "SELECT name_of_user,flags FROM user_2");
+    assert(users.equal([U(0, "Alice", f, 1011), U(0, "Marisa", f, 1110), U(0, "Patchouli", f, 1001)]));
 }
