@@ -29,6 +29,9 @@ struct columnName {
 enum ignore;
 
 ///
+enum identity;
+
+///
 struct convBy(alias T){}
 
 package(ddbc):
@@ -52,6 +55,9 @@ enum string getColumnName(alias value) = getUDAs!(value, columnName)[0].name;
 
 ///
 enum bool   hasIgnore(alias value) = hasUDA!(value, ignore);
+
+///
+enum bool   hasIdentity(alias value) = hasUDA!(value, identity);
 
 unittest {
     @tableName("a")

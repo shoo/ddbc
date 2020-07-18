@@ -50,6 +50,7 @@ module ddbc.pods;
 
 import std.algorithm;
 import std.traits;
+import std.meta;
 import std.typecons;
 import std.conv;
 import std.datetime;
@@ -715,7 +716,6 @@ template isValidFieldMember(T, string m) {
 }
 
 template isSupportedDataType(T) {
-    import std.meta: allSatisfy, Filter;
     enum bool isNotIgnore(string m) = !hasIgnore!(__traits(getMember, T, m));
     alias nonIgnoredMembers = Filter!(isNotIgnore, FieldNameTuple!T);
     enum bool isSupportedSimpleTypeMember(string m) = isSupportedSimpleType!(T, m);
@@ -738,7 +738,6 @@ template getColumnNameForMember(T, string m) {
 }
 
 template getMemberNamesAt(T, alias uda) {
-    import std.meta: staticMap, Filter;
     alias symbolsByUDA = getSymbolsByUDA!(T, uda);
     alias symbolsNameByUDA = staticMap!(getMemberNamesAt_getName, symbolsByUDA);
     alias isValidMember(string m) = isValidFieldMember!(T, m);
@@ -1112,15 +1111,175 @@ auto select(T, fieldList...)(Statement stmt) if (isSupportedDataType!T) {
     return Select(stmt);
 }
 
+enum string getIdentity(alias value) = __traits(identifier, value);
+
+template getIdentityFieldMembers(T) {
+    static if (getSymbolsByUDA!(T, identity).length > 0) {
+        alias getIdentityFieldMembers = getSymbolsByUDA!(T, identity);
+    } else static if (getSymbolsByUDA!(T, columnName("id")).length > 0) {
+        static assert(getSymbolsByUDA!(T, columnName("id")).length == 1);
+        alias getIdentityFieldMembers = getSymbolsByUDA!(T, columnName("id"));
+    } else static if (__traits(hasMember, T, "id")) {
+        static if (!hasIdentity!(__traits(getMember, T, "id"))) {
+            alias getIdentityFieldMembers = AliasSeq!(__traits(getMember, T, "id"));
+        } else {
+            alias getIdentityFieldMembers = AliasSeq!();
+        }
+    } else {
+        alias getIdentityFieldMembers = AliasSeq!();
+    }
+}
+enum getIdentityFieldMemberNames(T) = staticMap!(getIdentity, getIdentityFieldMembers!T);
+template getIdentityFieldMembers(alias o) {
+    template getMember(string m) { mixin(`alias getMember = o.` ~ m ~ ";"); } // alias getMember(string m) = __traits(getMember, o, m);
+    alias getIdentityFieldMembers = staticMap!(getMember, getIdentityFieldMemberNames!(typeof(o)));
+}
+enum hasIdentityFieldMember(T) = getIdentityFieldMembers!T.length > 0;
+enum isIdentityFieldMember(T, string m) = staticIndexOf!(m, getIdentityFieldMemberNames!T) != -1;
+
+unittest {
+    struct A {
+        int x = 1;
+        @identity int y = 2;
+    }
+    A a;
+    static assert(!isIdentityFieldMember!(A, "x"));
+    static assert( isIdentityFieldMember!(A, "y"));
+    static assert(getIdentityFieldMembers!A.length == 1);
+    static assert(getIdentityFieldMemberNames!A[0] == "y");
+    static assert(getIdentityFieldMembers!a[0].offsetof == A.y.offsetof);
+    
+    struct B {
+        int x = 1;
+        int id = 2;
+    }
+    B b;
+    static assert( isIdentityFieldMember!(B, "id"));
+    static assert(getIdentityFieldMemberNames!B[0] == "id");
+    static assert(getIdentityFieldMembers!b[0].offsetof == B.id.offsetof);
+    
+    struct C {
+        int x = 1;
+        int id = 2;
+        @identity int y = 3;
+    }
+    C c;
+    static assert(getIdentityFieldMembers!C.length == 1);
+    static assert(!isIdentityFieldMember!(C, "id"));
+    static assert( isIdentityFieldMember!(C, "y"));
+    static assert(getIdentityFieldMemberNames!C[0] == "y");
+    static assert(getIdentityFieldMembers!c[0].offsetof == C.y.offsetof);
+    
+    struct D {
+        @ignore int id;
+        @columnName("id") int x;
+    }
+    D d;
+    static assert(getIdentityFieldMembers!D.length == 1);
+    static assert(!isIdentityFieldMember!(D, "id"));
+    static assert( isIdentityFieldMember!(D, "x"));
+    static assert(getIdentityFieldMemberNames!D[0] == "x");
+    static assert(getIdentityFieldMembers!d[0].offsetof == D.x.offsetof);
+    
+    struct E {
+        @ignore int id;
+        @columnName("id") int x;
+        @identity int y;
+    }
+    E e;
+    static assert(getIdentityFieldMembers!E.length == 1);
+    static assert(!isIdentityFieldMember!(E, "id"));
+    static assert(!isIdentityFieldMember!(E, "x"));
+    static assert( isIdentityFieldMember!(E, "y"));
+    static assert(getIdentityFieldMemberNames!E[0] == "y");
+    static assert(getIdentityFieldMembers!e[0].offsetof == E.y.offsetof);
+    
+    struct F {
+        int id;
+        @columnName("id") int x;
+        @identity int y;
+    }
+    F f;
+    static assert(getIdentityFieldMembers!F.length == 1);
+    static assert(!isIdentityFieldMember!(F, "id"));
+    static assert(!isIdentityFieldMember!(F, "x"));
+    static assert( isIdentityFieldMember!(F, "y"));
+    static assert(getIdentityFieldMemberNames!F[0] == "y");
+    static assert(getIdentityFieldMembers!f[0].offsetof == F.y.offsetof);
+    
+    struct G {
+        @identity int id;
+        @columnName("id") int x;
+        @identity int y;
+    }
+    G g;
+    static assert(getIdentityFieldMembers!G.length == 2);
+    static assert( isIdentityFieldMember!(G, "id"));
+    static assert(!isIdentityFieldMember!(G, "x"));
+    static assert( isIdentityFieldMember!(G, "y"));
+    static assert(getIdentityFieldMemberNames!G[0] == "id");
+    static assert(getIdentityFieldMemberNames!G[1] == "y");
+    static assert(getIdentityFieldMembers!g[0].offsetof == G.id.offsetof);
+    static assert(getIdentityFieldMembers!g[1].offsetof == G.y.offsetof);
+}
+
+
+
+string toFieldString(T)(T arg)
+{
+    import std.conv, std.array;
+    static if (is(Unqual!T == bool)) {
+        return arg ? "true" : "false";
+    } else static if (is(Unqual!T == byte) || is(Unqual!T == ubyte)
+                   || is(Unqual!T == short) || is(Unqual!T == ushort)
+                   || is(Unqual!T == int) || is(Unqual!T == uint)
+                   || is(Unqual!T == long) || is(Unqual!T == ulong)
+                   || is(Unqual!T == float) || is(Unqual!T == double)) {
+        return arg.to!string();
+    } else static if (is(Unqual!T == SysTime)) {
+        return text("'", arg.toUTC().toISOExtString(), "'");
+    } else static if (is(Unqual!T == DateTime)) {
+        return text("'", arg.toISOExtString(), "'");
+    } else static if (is(Unqual!T == Date)) {
+        return text("'", arg.toISOExtString(), "'");
+    } else static if (is(Unqual!T == TimeOfDay)) {
+        return text("'", arg.toISOExtString(), "'");
+    } else static if (is(Unqual!T U == Nullable!U)) {
+        return arg.isNull ? "NULL" : toFieldString(arg.get());
+    } else static if (is(Unqual!T: const(char)[])) {
+        return "'" ~ arg.replace("'", "''") ~ "'";
+    } else static assert("Cannot convert to string.");
+}
+
+
+template convertToField(T, string m) {
+    mixin(`alias member = T.` ~ m ~ ";"); // alias member = __traits(getMember, T, m);
+    static if (isColumnTypeNullableByDefault!(T, m)) {
+        string convertToField(U)(U arg) {
+            if (arg.isNull)
+                return "NULL";
+            static if (hasConvertibleType!member) {
+                return toFieldString(convTo!(member, getFieldTraits!member.convertibleType)(arg));
+            } else {
+                return toFieldString(arg);
+            }
+        }
+    } else static if (hasConvertibleType!member) {
+        string convertToField(U)(U arg) {
+            return toFieldString(convTo!(member, getFieldTraits!member.convertibleType)(arg));
+        }
+    } else {
+        alias convertToField = toFieldString;
+    }
+}
+
 /// returns "INSERT INTO <table name> (<field list>) VALUES (value list)
 string generateInsertSQL(T)() {
     string res = "INSERT INTO " ~ getTableNameForType!(T)();
     string []values;
     foreach(m; FieldNameTuple!T) {
-        if (m != "id") {
-            static if (isValidFieldMember!(T, m)) {
-                values ~= getColumnNameForMember!(T, m);
-            }
+        static if (isValidFieldMember!(T, m) && !isIdentityFieldMember!(T, m)) {
+            values ~= getColumnNameForMember!(T, m);
         }
     }
     res ~= "(" ~ join(values, ",") ~ ")";
@@ -1128,49 +1287,28 @@ string generateInsertSQL(T)() {
     return res;
 }
 
-string addFieldValue(T)(string m) {
-    return `{
-        static if (isColumnTypeNullableByDefault!(T, "`~m~`")) {
-            if(o.`~m~`.isNull) {
-                values ~= "NULL";
-            } else {
-                static if (hasConvertibleType!(__traits(getMember, T, m))) {
-                    values ~= "'" ~ to!string(convTo!(o.` ~ m ~ `, getConvertibleType!(o.` ~ m ~ `)))(o.` ~ m ~ `) ~ "'";
-                } else {
-                    values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";
-                }
-            }
-        } else {
-            static if (canConvTo!(__traits(getMember, T, m), string)) {
-                values ~= "'" ~ convTo!(o.` ~ m ~ `, string)(o.` ~ m ~ `) ~ "'";
-            } else {
-                values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";
-            }
-        }
-    }`;
-}
-
 bool insert(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
     auto insertSQL = generateInsertSQL!(T)();
     string []values;
-    foreach(m; FieldNameTuple!T) {
-      if (m != "id") {
-        static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
-          // skip non-public members
-          static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
+    static foreach(m; FieldNameTuple!T) {
+        static if (isValidFieldMember!(T, m) && !isIdentityFieldMember!(T, m)) {
             // pragma(msg,addFieldValue!(T)(m));
-            mixin(addFieldValue!(T)(m));
-          }
+            values ~= convertToField!(T, m)(__traits(getMember, o, m));
         }
-      }
     }
     insertSQL ~= "(" ~ join(values, ",") ~ ")";
-    Variant insertId;
-    stmt.executeUpdate(insertSQL, insertId);
-    static if (hasConvertibleType!(o.id)) {
-        convertFrom!(o.id)(getConvertibleType!(o.id), insertId.get!(long));
+    static if (hasIdentityFieldMember!T) {
+        Variant insertId;
+        stmt.executeUpdate(insertSQL, insertId);
+        static foreach (m; getIdentityFieldMemberNames!T) {
+            static if (hasConvertibleType!(__traits(getMember, o, m))) {
+                convertFrom!(__traits(getMember, o, m))(insertId.get!(long), __traits(getMember, o, m));
+            } else {
+                __traits(getMember, o, m) = insertId.get!(long);
+            }
+        }
     } else {
-        o.id = insertId.get!(long);
+        stmt.executeUpdate(insertSQL);
     }
     return true;
 }
@@ -1180,50 +1318,31 @@ string generateUpdateSQL(T)() {
     string res = "UPDATE " ~ getTableNameForType!(T)();
     string []values;
     foreach(m; FieldNameTuple!T) {
-        if (m != "id") {
-            static if (isValidFieldMember!(T, m)) {
-                values ~= getColumnNameForMember!(T, m);
-            }
+        static if (isValidFieldMember!(T, m) && !isIdentityFieldMember!(T, m)) {
+            values ~= getColumnNameForMember!(T, m);
         }
     }
     res ~= " SET ";
     return res;
 }
 
-string addUpdateValue(T)(string m) {
-    return `{
-        static if (isColumnTypeNullableByDefault!(T, "`~m~`")) {
-            if(o.`~m~`.isNull) {
-                values ~= "NULL";
-            } else {
-                static if (hasConvertibleType!(o.` ~ m ~ `)) {
-                    values ~= "` ~ m ~ `=\"" ~ to!string(convTo!(o.` ~ m ~ `, getConvertibleType!(o.` ~ m ~ `))(o.` ~ m ~ `)) ~ "\"";
-                } else {
-                    values ~= "` ~ m ~ `=\"" ~ to!string(o.` ~ m ~ `) ~ "\"";
-                }
-            }
-        } else {
-            static if (hasConvertibleType!(o.` ~ m ~ `)) {
-                values ~= "` ~ m ~ `=\"" ~ to!string(convTo!(o.` ~ m ~ `, getConvertibleType!(o.` ~ m ~ `))(o.` ~ m ~ `)) ~ "\"";
-            } else {
-                values ~= "` ~ m ~ `=\"" ~ to!string(o.` ~ m ~ `) ~ "\"";
-            }
-        }
-    }`;
-}
-
 bool update(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
     auto updateSQL = generateUpdateSQL!(T)();
     string []values;
-    foreach(m; FieldNameTuple!T) {
-        if (m != "id") {
-            static if (isValidFieldMember!(T, m)) {
-                mixin(addUpdateValue!(T)(m));
-            }
+    static foreach(m; FieldNameTuple!T) {
+        static if (isValidFieldMember!(T, m) && !isIdentityFieldMember!(T, m)) {
+            values ~= getColumnNameForMember!(T, m) ~ "="~ convertToField!(T, m)(__traits(getMember, o, m));
         }
     }
     updateSQL ~= join(values, ",");
-    updateSQL ~= mixin(`" WHERE id="~ to!string(o.id) ~ ";"`);
+    updateSQL ~= " WHERE ";
+    static foreach (idx, idMemberName; getIdentityFieldMemberNames!T)
+    {
+        static if (idx != 0)
+            updateSQL ~= ",";
+        updateSQL ~= getColumnNameForMember!(T, idMemberName)
+            ~ "=" ~ convertToField!(T, idMemberName)(__traits(getMember, o, idMemberName));
+    }
     Variant updateId;
     stmt.executeUpdate(updateSQL, updateId);
     return true;
@@ -1494,11 +1613,12 @@ unittest {
         @convBy!Proxy               @sel1 @sel2
                                                 int     flags;
     }
+    static assert(hasIdentityFieldMember!User2);
     
-    import std.array: array;
     alias U = User2;
     alias V = Variant;
     enum  f = File.init;
+    import std.array: array;
     
     stmt.resultSet.make(3, ["id", "name_of_user", "flags"]);
     stmt.resultSet[0][] = [V(1), V("Alice"),     V("1011")];
@@ -1523,4 +1643,92 @@ unittest {
     users = stmt.select!(U, getMemberNamesAt!(U, sel2)).array;
     assert(stmt.lastQuery.shrinkWhite == "SELECT name_of_user,flags FROM user_2");
     assert(users.equal([U(0, "Alice", f, 1011), U(0, "Marisa", f, 1110), U(0, "Patchouli", f, 1001)]));
+}
+
+unittest {
+    auto stmt = new StubStatement;
+    scope (exit) stmt.close();
+    struct Data1 {
+        long id;
+        int x;
+        int y;
+    }
+    auto data1 = Data1(0);
+    stmt.nextInsertIds ~= 1;
+    stmt.insert(data1);
+    assert(stmt.lastQuery.shrinkWhite == "INSERT INTO data1(x,y) VALUES (0,0)");
+    
+    // UDA and id-less
+    @tableName("data_2")
+    struct Data2 {
+        @columnName("data_x")
+        int x;
+        @columnName("data_y")
+        int y;
+    }
+    auto data2 = Data2(0);
+    stmt.insert(data2);
+    assert(stmt.lastQuery.shrinkWhite == "INSERT INTO data_2(data_x,data_y) VALUES (0,0)");
+    
+    // id with UDA
+    struct Data3 {
+        int x;
+        int y;
+        static struct Proxy {
+            static long to(Data1 dat) { return dat.id; }
+            static Data1 from(long v) { return Data1(v); }
+        }
+        @identity @convBy!Proxy
+        Data1 num;
+    }
+    auto data3 = Data3(0);
+    stmt.nextInsertIds ~= 2;
+    stmt.insert(data3);
+    assert(stmt.lastQuery.shrinkWhite == "INSERT INTO data3(x,y) VALUES (0,0)");
+    assert(data3.num.id == 2);
+}
+
+unittest {
+    auto stmt = new StubStatement;
+    scope (exit) stmt.close();
+    struct Data1 {
+        long id;
+        int x;
+        int y;
+    }
+    auto data1 = Data1(1);
+    stmt.update(data1);
+    assert(stmt.lastQuery.shrinkWhite == "UPDATE data1 SET x=0,y=0 WHERE id=1");
+    
+    struct Data2 {
+        long id;
+        @identity
+        int x;
+        int y;
+    }
+    auto data2 = Data2(2);
+    stmt.update(data2);
+    assert(stmt.lastQuery.shrinkWhite == "UPDATE data2 SET id=2,y=0 WHERE x=0");
+    
+    @tableName("data333333")
+    struct Data3 {
+        @ignore
+        long id;
+        int x;
+        @columnName("id")
+        int y;
+    }
+    auto data3 = Data3(3);
+    stmt.update(data3);
+    assert(stmt.lastQuery.shrinkWhite == "UPDATE data333333 SET x=0 WHERE id=0");
+    
+    struct Data4 {
+        string x;
+        @identity int y;
+        @identity Date z;
+    }
+    auto data4 = Data4("ab'c'de", 10, Date(2020,4,1));
+    stmt.update(data4);
+    assert(stmt.lastQuery.shrinkWhite == "UPDATE data4 SET x='ab''c''de' WHERE y=10,z='2020-04-01'");
+    
 }
