@@ -469,19 +469,26 @@ int main(string[] args)
     }
 
 	// todo: Fix the UPDATE/INSERT functionality for PODs
-	// Employee e; 
-	// e.name = "Dave Smith";
-	// e.flags = 35;
-	// e.dob = Date(1979, 8, 5);
-	// e.created = cast(DateTime) now;
-	// e.updated = now;
+	Employee e; 
+	e.name = "Dave Smith";
+	e.flags = 35;
+	e.dob = Date(1979, 8, 5);
+	e.created = cast(DateTime) now;
+	e.updated = now;
 
-	// if(conn.createStatement().insert!Employee(e)) {
-	// 	writeln("Successfully inserted new emplyee: \t{id: ", e.id, ", name: ", e.name, ", flags: ", e.flags, ", dob: ", e.dob, ", created: ", e.created, ", updated: ", e.updated, "}");
-	// } else {
-	// 	write("Failed to INSERT employee");
-	// 	assert(false);
-	// }
+	if(conn.createStatement().insert(e)) {
+		writeln("Successfully inserted new emplyee: \t{id: ", e.id, ", name: ", e.name, ", flags: ", e.flags, ", dob: ", e.dob, ", created: ", e.created, ", updated: ", e.updated, "}");
+	} else {
+		write("Failed to INSERT employee");
+		assert(false);
+	}
+	if(conn.createStatement().insert!Employee(e)) {
+		writeln("Successfully inserted new emplyee: \t{id: ", e.id, ", name: ", e.name, ", flags: ", e.flags, ", dob: ", e.dob, ", created: ", e.created, ", updated: ", e.updated, "}");
+	} else {
+		write("Failed to INSERT employee");
+		assert(false);
+	}
+	e = Employee.init;
 
 	writeln("Completed tests");
 	return 0;

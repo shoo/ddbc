@@ -1117,14 +1117,11 @@ string generateInsertSQL(T)() {
     string res = "INSERT INTO " ~ getTableNameForType!(T)();
     string []values;
     foreach(m; FieldNameTuple!T) {
-      if (m != "id") {
-        static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
-          // skip non-public members
-          static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
-            values ~= m;
-          }
+        if (m != "id") {
+            static if (isValidFieldMember!(T, m)) {
+                values ~= getColumnNameForMember!(T, m);
+            }
         }
-      }
     }
     res ~= "(" ~ join(values, ",") ~ ")";
     res ~= " VALUES ";
@@ -1132,17 +1129,25 @@ string generateInsertSQL(T)() {
 }
 
 string addFieldValue(T)(string m) {
-  string tmp = `{Variant v = o.`~m~`;`;
-  tmp ~=  `static if (isColumnTypeNullableByDefault!(T, "`~m~`")()) {`;
-  tmp ~= `	if(o.`~m~`.isNull) {`;
-  tmp ~= `		values ~= "NULL";`;
-  tmp ~= `	} else {`;
-  tmp ~= `		values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";`;
-  tmp ~= `}} else {`;
-  tmp ~= `		values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";`;
-  tmp ~= `}}`;
-  return tmp;
-  // return `values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";`;
+    return `{
+        static if (isColumnTypeNullableByDefault!(T, "`~m~`")) {
+            if(o.`~m~`.isNull) {
+                values ~= "NULL";
+            } else {
+                static if (hasConvertibleType!(__traits(getMember, T, m))) {
+                    values ~= "'" ~ to!string(convTo!(o.` ~ m ~ `, getConvertibleType!(o.` ~ m ~ `)))(o.` ~ m ~ `) ~ "'";
+                } else {
+                    values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";
+                }
+            }
+        } else {
+            static if (canConvTo!(__traits(getMember, T, m), string)) {
+                values ~= "'" ~ convTo!(o.` ~ m ~ `, string)(o.` ~ m ~ `) ~ "'";
+            } else {
+                values ~= "'" ~ to!string(o.` ~ m ~ `) ~ "'";
+            }
+        }
+    }`;
 }
 
 bool insert(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
@@ -1162,63 +1167,60 @@ bool insert(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
     insertSQL ~= "(" ~ join(values, ",") ~ ")";
     Variant insertId;
     stmt.executeUpdate(insertSQL, insertId);
-    o.id = insertId.get!long;
+    static if (hasConvertibleType!(o.id)) {
+        convertFrom!(o.id)(getConvertibleType!(o.id), insertId.get!(long));
+    } else {
+        o.id = insertId.get!(long);
+    }
     return true;
 }
 
 /// returns "UPDATE <table name> SET field1=value1 WHERE id=id
 string generateUpdateSQL(T)() {
-  string res = "UPDATE " ~ getTableNameForType!(T)();
-  string []values;
-  foreach(m; FieldNameTuple!T) {
-    if (m != "id") {
-      static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
-        // skip non-public members
-        static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
-          values ~= m;
+    string res = "UPDATE " ~ getTableNameForType!(T)();
+    string []values;
+    foreach(m; FieldNameTuple!T) {
+        if (m != "id") {
+            static if (isValidFieldMember!(T, m)) {
+                values ~= getColumnNameForMember!(T, m);
+            }
         }
-      }
     }
-  }
-  res ~= " SET ";
-  return res;
+    res ~= " SET ";
+    return res;
 }
 
 string addUpdateValue(T)(string m) {
-  return `values ~= "` ~ m ~ `=\"" ~ to!string(o.` ~ m ~ `) ~ "\"";`;
+    return `{
+        static if (isColumnTypeNullableByDefault!(T, "`~m~`")) {
+            if(o.`~m~`.isNull) {
+                values ~= "NULL";
+            } else {
+                static if (hasConvertibleType!(o.` ~ m ~ `)) {
+                    values ~= "` ~ m ~ `=\"" ~ to!string(convTo!(o.` ~ m ~ `, getConvertibleType!(o.` ~ m ~ `))(o.` ~ m ~ `)) ~ "\"";
+                } else {
+                    values ~= "` ~ m ~ `=\"" ~ to!string(o.` ~ m ~ `) ~ "\"";
+                }
+            }
+        } else {
+            static if (hasConvertibleType!(o.` ~ m ~ `)) {
+                values ~= "` ~ m ~ `=\"" ~ to!string(convTo!(o.` ~ m ~ `, getConvertibleType!(o.` ~ m ~ `))(o.` ~ m ~ `)) ~ "\"";
+            } else {
+                values ~= "` ~ m ~ `=\"" ~ to!string(o.` ~ m ~ `) ~ "\"";
+            }
+        }
+    }`;
 }
 
 bool update(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
     auto updateSQL = generateUpdateSQL!(T)();
     string []values;
     foreach(m; FieldNameTuple!T) {
-      if (m != "id") {
-        static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
-          // skip non-public members
-          static if (__traits(getProtection, __traits(getMember, T, m)) == "public") {
-
-            // static if(typeof(__traits(getMember, T, m)) == function) {
-            //     pragma(msg, "Ignoring function: "~m~"()");
-            // }
-
-            // static if(is(__traits(getMember, T, m) == function)) {
-            //     pragma(msg, "Ignoring function: "~m~"()");
-            // } else {
-            //     pragma(msg, addUpdateValue!(T)(m));
-            //     //mixin(addUpdateValue!(T)(m));
-            // }
-
-            static if (__traits(getOverloads, T, m).length > 0) {
-                // even if the struct/class doesn't have and override (such as opAssign) the compiler
-                // can potentially add one. See: https://dlang.org/library/std/traits/has_elaborate_assign.html
-                pragma(msg, "Ignoring 'override "~m~"()'");
-            } else {
-                pragma(msg, addUpdateValue!(T)(m));
+        if (m != "id") {
+            static if (isValidFieldMember!(T, m)) {
                 mixin(addUpdateValue!(T)(m));
             }
-          }
         }
-      }
     }
     updateSQL ~= join(values, ",");
     updateSQL ~= mixin(`" WHERE id="~ to!string(o.id) ~ ";"`);
