@@ -1355,11 +1355,18 @@ string generateDeleteSQL(T)() {
 }
 
 bool remove(T)(Statement stmt, ref T o) if (isSupportedDataType!T) {
-  auto deleteSQL = generateDeleteSQL!(T)();
-  deleteSQL ~= mixin(`" WHERE id="~ to!string(o.id) ~ ";"`);
-  Variant deleteId;
-  stmt.executeUpdate(deleteSQL, deleteId);
-  return true;
+    auto deleteSQL = generateDeleteSQL!(T)();
+    deleteSQL ~= " WHERE ";
+    static foreach (idx, idMemberName; getIdentityFieldMemberNames!T)
+    {
+        static if (idx != 0)
+            deleteSQL ~= ",";
+        deleteSQL ~= getColumnNameForMember!(T, idMemberName)
+            ~ "=" ~ convertToField!(T, idMemberName)(__traits(getMember, o, idMemberName));
+    }
+    Variant deleteId;
+    stmt.executeUpdate(deleteSQL, deleteId);
+    return true;
 }
 
 // TODO: use better way to count parameters
@@ -1731,4 +1738,35 @@ unittest {
     stmt.update(data4);
     assert(stmt.lastQuery.shrinkWhite == "UPDATE data4 SET x='ab''c''de' WHERE y=10,z='2020-04-01'");
     
+}
+
+unittest {
+    auto stmt = new StubStatement;
+    scope (exit) stmt.close();
+    struct Data1 {
+        long id;
+        int x;
+        int y;
+    }
+    auto data1 = Data1(1);
+    stmt.remove(data1);
+    assert(stmt.lastQuery.shrinkWhite == "DELETE FROM data1 WHERE id=1");
+    
+    // UDA and id-less
+    @tableName("data_2")
+    struct Data2 {
+        @columnName("data_x")
+        int x;
+        @columnName("data_y")
+        int y;
+        static struct Proxy {
+            static long to(Data1 dat) { return dat.id; }
+            static Data1 from(long v) { return Data1(v); }
+        }
+        @identity @convBy!Proxy
+        Data1 num;
+    }
+    auto data2 = Data2(1,2,Data1(5));
+    stmt.remove(data2);
+    assert(stmt.lastQuery.shrinkWhite == "DELETE FROM data_2 WHERE num=5");
 }
