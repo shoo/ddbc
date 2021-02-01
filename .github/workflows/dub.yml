@@ -187,7 +187,7 @@ jobs:
         working-directory: example
         run: dub build --config=SQLite-omf --arch=x86 && ./ddbctest --connection=sqlite:ddbc-test.sqlite
         env: 
-          DFLAGS: ${DFLAGS} -lowmem
+          DFLAGS: -lowmem
 
       # x86_mscoff
       - name: dub test with SQLite config on x86_mscoff
@@ -200,7 +200,7 @@ jobs:
         working-directory: example
         run: dub build --config=SQLite --arch=x86_mscoff && ./ddbctest --connection=sqlite:ddbc-test.sqlite
         env: 
-          DFLAGS: ${DFLAGS} -lowmem
+          DFLAGS: -lowmem
 
       # x86_64
       - name: dub test with SQLite config on x86_64
@@ -213,4 +213,4 @@ jobs:
         working-directory: example
         run: dub build --config=SQLite --arch=x86_64 && ./ddbctest --connection=sqlite:ddbc-test.sqlite
         env: 
-          DFLAGS: ${DFLAGS} -lowmem
+          DFLAGS: -lowmem
