@@ -103,15 +103,15 @@ jobs:
           compiler: ${{ matrix.compiler }}
 
       - name: dub test with SQLite config on ${{ matrix.arch }}
-        if: !( startsWith(matrix.compiler, 'ldc') && matrix.arch == 'x86_mscoff' )
+        if: ! startsWith(matrix.compiler, 'ldc') || matrix.arch != 'x86_mscoff' )
         run: dub test --config=SQLite --arch=${{ matrix.arch }}
 
       - name: dub run with test config on ${{ matrix.arch }}
-        if: !( startsWith(matrix.compiler, 'ldc') && matrix.arch == 'x86_mscoff' )
+        if: ! startsWith(matrix.compiler, 'ldc') || matrix.arch != 'x86_mscoff' )
         run: dub run --config=test --arch=${{ matrix.arch }}
 
       - name: run the ddbctest project on ${{ matrix.arch }}
-        if: !( startsWith(matrix.compiler, 'ldc') && matrix.arch == 'x86_mscoff' )
+        if: ! startsWith(matrix.compiler, 'ldc') || matrix.arch != 'x86_mscoff' )
         working-directory: example
         run: dub build --config=SQLite --arch=${{ matrix.arch }} && ./ddbctest --connection=sqlite:ddbc-test.sqlite
 
