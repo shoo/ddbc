@@ -59,6 +59,9 @@ jobs:
       #   if: startsWith(matrix.os, 'mac')
       #   run: brew bundle
 
+      - name: Upgrade dub dependencies
+        uses: WebFreak001/dub-upgrade@v0.1
+
       - name: dub test with SQLite config
         run: dub test --config=SQLite
         
@@ -100,6 +103,10 @@ jobs:
         uses: dlang-community/setup-dlang@v1
         with:
           compiler: ${{ matrix.compiler }}
+
+      - name: Upgrade dub dependencies
+        uses: WebFreak001/dub-upgrade@v0.1
+
       # x86
       - name: dub test with SQLite config on x86
         run: dub test --config=SQLite --arch=x86
@@ -165,6 +172,9 @@ jobs:
         uses: dlang-community/setup-dlang@v1
         with:
           compiler: ${{ matrix.compiler }}
+
+      - name: Upgrade dub dependencies
+        uses: WebFreak001/dub-upgrade@v0.1
 
       # x86
       - name: dub test with SQLite config on x86
