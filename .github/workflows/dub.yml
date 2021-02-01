@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ] # don't bother with macos-latest
+        os: [ ubuntu-latest ] # don't bother with macos-latest
         compiler:
           - dmd-latest
           - ldc-latest
@@ -68,3 +68,104 @@ jobs:
       - name: run the ddbctest project
         working-directory: example
         run: dub build --config=SQLite && ./ddbctest --connection=sqlite:ddbc-test.sqlite
+
+  test-windows:
+    name: ${{ matrix.compiler }} on ${{ matrix.os }}-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest ] # don't bother with macos-latest
+        compiler:
+          - dmd-latest
+          - ldc-latest
+          - dmd-2.094.2
+          - ldc-1.24.0 # eq to dmd v2.094.1
+          - ldc-1.23.0 # eq to dmd v2.093.1
+          - ldc-1.22.0 # eq to dmd v2.092.1
+          - ldc-1.21.0 # eq to dmd v2.091.1
+          - ldc-1.20.1 # eq to dmd v2.090.1
+          - ldc-1.19.0 # eq to dmd v2.089.1
+          - ldc-1.18.0 # eq to dmd v2.088.1
+          - ldc-1.17.0 # eq to dmd v2.087
+          - ldc-1.16.0 # eq to dmd v2.086.1
+          - ldc-1.15.0 # eq to dmd v2.085.1
+          - ldc-1.14.0 # eq to dmd v2.084.1
+          - ldc-1.13.0 # eq to dmd v2.083.1
+          - ldc-1.12.0 # eq to dmd v2.082.1
+        arch: [x86, x86_64, x86_mscoff]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install D ${{ matrix.compiler }}
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+
+      - name: dub test with SQLite config on ${{ matrix.arch }}
+        if: ! ( startsWith(matrix.compiler, 'ldc') && matrix.arch == 'x86_mscoff' )
+        run: dub test --config=SQLite --arch=${{ matrix.arch }}
+
+      - name: dub run with test config on ${{ matrix.arch }}
+        if: ! ( startsWith(matrix.compiler, 'ldc') && matrix.arch == 'x86_mscoff' )
+        run: dub run --config=test --arch=${{ matrix.arch }}
+
+      - name: run the ddbctest project on ${{ matrix.arch }}
+        if: ! ( startsWith(matrix.compiler, 'ldc') && matrix.arch == 'x86_mscoff' )
+        working-directory: example
+        run: dub build --config=SQLite --arch=${{ matrix.arch }} && ./ddbctest --connection=sqlite:ddbc-test.sqlite
+
+  test-win32-older:
+    name: ${{ matrix.compiler }} on ${{ matrix.os }}-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest ] # don't bother with macos-latest
+        compiler:
+          - dmd-2.093.1
+          - dmd-2.092.1
+          - dmd-2.091.1
+          - dmd-2.090.1
+          - dmd-2.089.1
+          - dmd-2.088.1
+          - dmd-2.087.1
+          - dmd-2.086.1
+          - dmd-2.085.1
+          - dmd-2.084.1
+          - dmd-2.083.1
+          - dmd-2.082.1
+        arch: [x86, x86_64, x86_mscoff]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install D ${{ matrix.compiler }}
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+
+      - name: dub test with SQLite config on ${{ matrix.arch }}
+        if: matrix.arch == 'x86'
+        run: dub test --config=SQLite-omf --arch=${{ matrix.arch }}
+
+      - name: dub test with SQLite config on ${{ matrix.arch }}
+        if: matrix.arch != 'x86'
+        run: dub test --config=SQLite --arch=${{ matrix.arch }}
+
+      - name: dub run with test config on ${{ matrix.arch }}
+        if: matrix.arch == 'x86'
+        run: dub run --config=test-omf --arch=${{ matrix.arch }}
+
+      - name: dub run with test config on ${{ matrix.arch }}
+        if: matrix.arch != 'x86'
+        run: dub run --config=test --arch=${{ matrix.arch }}
+
+      - name: run the ddbctest project on ${{ matrix.arch }}
+        if: matrix.arch == 'x86'
+        working-directory: example
+        run: dub build --config=SQLite-omf --arch=${{ matrix.arch }} && ./ddbctest --connection=sqlite:ddbc-test.sqlite
+
+      - name: run the ddbctest project on ${{ matrix.arch }}
+        if: matrix.arch != 'x86'
+        working-directory: example
+        run: dub build --config=SQLite --arch=${{ matrix.arch }} && ./ddbctest --connection=sqlite:ddbc-test.sqlite
