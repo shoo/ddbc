@@ -112,14 +112,8 @@
             "targetPath": "test",
             "targetType": "executable",
             "versions": ["USE_SQLITE"],
-            "libs-posix": ["sqlite3"],
-            "lflags-osx": ["-L/usr/local/opt/sqlite3/lib/"],
             "copyFiles-windows-x86": [ "libs/win32/sqlite3.dll" ],
-            "copyFiles-windows-x86_64": [ "libs/win64/sqlite3.dll" ],
-            "sourceFiles-windows-x86_64" : [ "libs/win64/sqlite3.lib" ],
-            "sourceFiles-windows-x86-ldc" : [ "libs/win32-mscoff/sqlite3.lib" ],
-            "sourceFiles-windows-x86_omf-dmd" : [ "libs/win32/sqlite3.lib" ],
-            "sourceFiles-windows-x86_mscoff-dmd" : [ "libs/win32-mscoff/sqlite3.lib" ]
+            "sourceFiles-windows-x86-dmd" : [ "libs/win32/sqlite3.lib" ]
         }
     ]
 }
