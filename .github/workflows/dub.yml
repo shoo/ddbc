@@ -72,6 +72,9 @@ jobs:
         working-directory: example
         run: dub build --config=SQLite && ./ddbctest --connection=sqlite:ddbc-test.sqlite
 
+      - uses: WebFreak001/dub-upgrade@v0.1 # cache
+        with: { store: true }
+
   test-windows:
     name: ${{ matrix.compiler }} on ${{ matrix.os }}
     strategy:
@@ -143,7 +146,10 @@ jobs:
       - name: run the ddbctest project on x86_64
         working-directory: example
         run: dub build --config=SQLite --arch=x86_64 && ./ddbctest --connection=sqlite:ddbc-test.sqlite
-  
+
+      - uses: WebFreak001/dub-upgrade@v0.1 # cache
+        with: { store: true }
+
   # before dub 1.23.0(x86_omf unsupported)
   test-win32-older:
     name: ${{ matrix.compiler }} on ${{ matrix.os }}
@@ -214,3 +220,6 @@ jobs:
         run: dub build --config=SQLite --arch=x86_64 && ./ddbctest --connection=sqlite:ddbc-test.sqlite
         env: 
           DFLAGS: -lowmem
+
+      - uses: WebFreak001/dub-upgrade@v0.1 # cache
+        with: { store: true }
