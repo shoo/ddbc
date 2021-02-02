@@ -131,15 +131,15 @@ jobs:
 
       # x86 (without windows-dmd, ubuntu)
       - name: dub test with SQLite config
-        if: ${{ !(startsWith(matrix.os, 'windows') && startsWith(matrix.compiler, 'dmd')) || startsWith(matrix.os, 'ubuntu') }}
+        if: ${{ !(startsWith(matrix.os, 'windows') && startsWith(matrix.compiler, 'dmd')) && !startsWith(matrix.os, 'ubuntu') }}
         run: dub test --config=SQLite --arch=x86
         
       - name: dub run with test config
-        if: ${{ !(startsWith(matrix.os, 'windows') && startsWith(matrix.compiler, 'dmd')) || startsWith(matrix.os, 'ubuntu') }}
+        if: ${{ !(startsWith(matrix.os, 'windows') && startsWith(matrix.compiler, 'dmd')) && !startsWith(matrix.os, 'ubuntu') }}
         run: dub run --config=test --arch=x86
         
       - name: run the ddbctest project
-        if: ${{ !(startsWith(matrix.os, 'windows') && startsWith(matrix.compiler, 'dmd')) || startsWith(matrix.os, 'ubuntu') }}
+        if: ${{ !(startsWith(matrix.os, 'windows') && startsWith(matrix.compiler, 'dmd')) && !startsWith(matrix.os, 'ubuntu') }}
         working-directory: example
         run: dub build --config=SQLite --arch=x86 && ./ddbctest --connection=sqlite:ddbc-test.sqlite
 
